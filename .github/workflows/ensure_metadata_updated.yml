@@ -1,0 +1,30 @@
+name: ensure metadata updated
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  ensure-metadata-updated:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check versionName
+        run: git diff HEAD~...HEAD -- app/build.gradle.kts | grep -E '^\+' | grep -q 'versionName' || (echo "Version name not updated" && exit 1)
+
+      - name: Check versionCode
+        run: git diff HEAD~...HEAD -- app/build.gradle.kts | grep -E '^\+' | grep -q 'versionCode' || (echo "Version code not updated" && exit 1)
+
+      - name: Check changelog
+        run: git diff HEAD~...HEAD --name-status -- 'metadata/en-US/changelogs/' | grep -qE '^A' || (echo "Changelog file not added" && exit 1)
+
+      - name: Check version string
+        run: git diff HEAD~...HEAD -- app/src/main/res/values/strings.xml | grep -E '^\+' | grep -q 'app_version' || (echo "Version string not updated" && exit 1)
