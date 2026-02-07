@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import co.adityarajput.fileflow.data.Repository
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.Rule
+import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.Logger
 import co.adityarajput.fileflow.utils.pathToFile
 
@@ -26,19 +27,20 @@ class UpsertRuleViewModel(
         val srcFileNamePattern: String = "",
         val dest: String = "",
         val destFileNameTemplate: String = "",
+        val superlative: FileSuperlative = FileSuperlative.LATEST,
         val keepOriginal: Boolean = true,
         val overwriteExisting: Boolean = false,
     ) {
         constructor(rule: Rule) : this(
             rule.id, (rule.action as Action.MOVE).src, rule.action.srcFileNamePattern,
-            rule.action.dest, rule.action.destFileNameTemplate, rule.action.keepOriginal,
-            rule.action.overwriteExisting,
+            rule.action.dest, rule.action.destFileNameTemplate, rule.action.superlative,
+            rule.action.keepOriginal, rule.action.overwriteExisting,
         )
 
         fun toRule() = Rule(
             Action.MOVE(
-                src, srcFileNamePattern, dest, destFileNameTemplate, keepOriginal,
-                overwriteExisting,
+                src, srcFileNamePattern, dest, destFileNameTemplate,
+                keepOriginal, overwriteExisting, superlative,
             ),
             id = ruleId,
         )

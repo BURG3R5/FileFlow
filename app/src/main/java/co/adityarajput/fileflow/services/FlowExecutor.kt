@@ -28,75 +28,68 @@ class FlowExecutor(private val context: Context) {
                 continue
             }
 
-            for (srcFile in context.pathToFile(rule.action.src)?.listFiles() ?: arrayOf()) {
-                if (!srcFile.isFile || srcFile.name == null || !regex.matches(srcFile.name!!)) continue
+            val srcFile = context.pathToFile(rule.action.src)?.listFiles()
+                ?.filter { it.isFile && it.name != null && regex.matches(it.name!!) }
+                ?.maxByOrNull(rule.action.superlative.selector)
+                ?: continue
+
+            val destFileName = regex.replace(srcFile.name!!, rule.action.destFileNameTemplate)
+            var destFile = destDir.listFiles().firstOrNull { it.isFile && it.name == destFileName }
+
+            if (destFile != null) {
+                if (!rule.action.overwriteExisting) {
+                    Logger.e("FlowExecutor", "${destFile.name} already exists")
+                    continue
+                }
 
                 resolver.openInputStream(srcFile.uri).use { src ->
-                    if (src == null) {
-                        Logger.e("FlowExecutor", "Failed to open ${srcFile.name}")
-                        continue
-                    }
-
-                    val destFileName = regex.replace(
-                        srcFile.name!!,
-                        rule.action.destFileNameTemplate,
-                    )
-                    var destFile = destDir.listFiles()
-                        .filter { it.isFile }
-                        .firstOrNull { it.name == destFileName }
-
-                    if (destFile != null) {
-                        if (!rule.action.overwriteExisting) {
-                            Logger.e("FlowExecutor", "$destFileName already exists")
+                    resolver.openInputStream(destFile.uri).use { dest ->
+                        if (src == null || dest == null) {
+                            Logger.e("FlowExecutor", "Failed to open file(s)")
                             continue
                         }
 
-                        resolver.openInputStream(destFile.uri).use { dest ->
-                            if (dest == null) {
-                                Logger.e("FlowExecutor", "Failed to open existing destination file")
-                                continue
-                            }
-
-                            if (src.readBytes().contentEquals(dest.readBytes())) {
-                                Logger.i(
-                                    "FlowExecutor",
-                                    "Source and destination files are identical",
-                                )
-                                continue
-                            }
+                        if (src.readBytes().contentEquals(dest.readBytes())) {
+                            Logger.i(
+                                "FlowExecutor",
+                                "Source and destination files are identical",
+                            )
+                            continue
                         }
-
-                        Logger.i("FlowExecutor", "Deleting existing $destFileName")
-                        destFile.delete()
                     }
+                }
 
-                    destFile = destDir.createFile(
-                        srcFile.type ?: "application/octet-stream",
-                        destFileName,
-                    )
+                Logger.i("FlowExecutor", "Deleting existing ${destFile.name}")
+                destFile.delete()
+            }
 
-                    if (destFile == null) {
-                        Logger.e("FlowExecutor", "Failed to create $destFileName")
+            destFile = destDir.createFile(
+                srcFile.type ?: "application/octet-stream",
+                destFileName,
+            )
+
+            if (destFile == null) {
+                Logger.e("FlowExecutor", "Failed to create $destFileName")
+                continue
+            }
+
+            resolver.openInputStream(srcFile.uri).use { src ->
+                resolver.openOutputStream(destFile.uri).use { dest ->
+                    if (src == null || dest == null) {
+                        Logger.e("FlowExecutor", "Failed to open file(s)")
                         continue
                     }
 
-                    resolver.openOutputStream(destFile.uri).use { dest ->
-                        if (dest == null) {
-                            Logger.e("FlowExecutor", "Failed to open $destFileName")
-                            continue
-                        }
+                    Logger.i("FlowExecutor", "Copying ${srcFile.name} to ${destFile.name}")
+                    src.copyTo(dest)
+                    repository.registerExecution(
+                        rule,
+                        Execution(srcFile.name!!, rule.action.verb),
+                    )
 
-                        Logger.i("FlowExecutor", "Copying ${srcFile.name} to ${destFile.name}")
-                        src.copyTo(dest)
-                        repository.registerExecution(
-                            rule,
-                            Execution(srcFile.name!!, rule.action.verb),
-                        )
-
-                        if (!rule.action.keepOriginal) {
-                            Logger.i("FlowExecutor", "Deleting original ${srcFile.name}")
-                            srcFile.delete()
-                        }
+                    if (!rule.action.keepOriginal) {
+                        Logger.i("FlowExecutor", "Deleting original ${srcFile.name}")
+                        srcFile.delete()
                     }
                 }
             }

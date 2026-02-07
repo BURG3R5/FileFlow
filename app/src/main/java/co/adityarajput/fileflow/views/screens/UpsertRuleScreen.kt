@@ -6,9 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
 import co.adityarajput.fileflow.R
+import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.getGetDirectoryFromUri
 import co.adityarajput.fileflow.utils.takePersistablePermission
 import co.adityarajput.fileflow.viewmodels.FormError
@@ -115,6 +114,7 @@ fun UpsertRuleScreen(
 private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     val context = LocalContext.current
 
+    var superlativeDropdownExpanded by remember { mutableStateOf(false) }
     val filesInSrc = remember(viewModel.state.values.src) { viewModel.getFilesInSrc(context) }
     val showWarning = remember(viewModel.state.values) {
         if (viewModel.state.error != null || filesInSrc == null || filesInSrc.isEmpty()) false
@@ -155,7 +155,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         Modifier
             .fillMaxWidth()
             .clickable { srcPicker.launch(null) },
-        style = MaterialTheme.typography.bodyMedium,
+        style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.Normal,
     )
     OutlinedTextField(
@@ -202,6 +202,30 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
             fontWeight = FontWeight.Normal,
         )
     }
+    Box {
+        Text(
+            buildAnnotatedString {
+                append(stringResource(R.string.choose_superlative))
+                withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
+                    append(stringResource(viewModel.state.values.superlative.displayName))
+                }
+            },
+            Modifier.clickable { superlativeDropdownExpanded = true },
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Normal,
+        )
+        DropdownMenu(superlativeDropdownExpanded, { superlativeDropdownExpanded = false }) {
+            FileSuperlative.entries.forEach {
+                DropdownMenuItem(
+                    { Text(stringResource(it.displayName)) },
+                    {
+                        viewModel.updateForm(viewModel.state.values.copy(superlative = it))
+                        superlativeDropdownExpanded = false
+                    },
+                )
+            }
+        }
+    }
     Icon(
         painterResource(R.drawable.arrow_down),
         stringResource(R.string.alttext_arrow_down),
@@ -220,7 +244,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         Modifier
             .fillMaxWidth()
             .clickable { destPicker.launch(null) },
-        style = MaterialTheme.typography.bodyMedium,
+        style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.Normal,
     )
     OutlinedTextField(

@@ -31,6 +31,11 @@
     <string name="pattern_should_match">Pattern should match %1$s</string>
     <string name="or">" or "</string>
     <string name="delete_original">Delete original files from the source after execution</string>
+    <string name="choose_superlative">"In case of multiple matches, choose: "</string>
+    <string name="earliest">earliest</string>
+    <string name="latest">latest</string>
+    <string name="smallest">smallest</string>
+    <string name="largest">largest</string>
     <string name="destination">"Destination: "</string>
     <string name="file_name_template">File name template</string>
     <string name="template_placeholder">Enter a regex template</string>
