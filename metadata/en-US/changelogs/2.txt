@@ -1,0 +1,2 @@
+• feat: Provide 'superlative' to use in case of multiple matches
+• fix: Skip MOVE if identical contents

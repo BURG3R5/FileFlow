@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">FileFlow</string>
     <string name="app_name_launcher">FileFlow</string>
-    <string name="app_version">1.0.0</string>
+    <string name="app_version">1.1.0</string>
 
     <string name="no_rules">No rules added.\nTap + to get started.</string>
     <string name="move">MOVE</string>
