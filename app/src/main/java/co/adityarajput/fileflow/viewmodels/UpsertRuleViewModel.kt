@@ -8,8 +8,8 @@ import androidx.lifecycle.ViewModel
 import co.adityarajput.fileflow.data.Repository
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.Rule
-import co.adityarajput.fileflow.services.pathToFile
 import co.adityarajput.fileflow.utils.Logger
+import co.adityarajput.fileflow.utils.pathToFile
 
 class UpsertRuleViewModel(
     rule: Rule?,
