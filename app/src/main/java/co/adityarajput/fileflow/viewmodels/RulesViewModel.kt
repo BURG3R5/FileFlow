@@ -27,9 +27,19 @@ class RulesViewModel(private val repository: Repository) : ViewModel() {
 
     var selectedRule by mutableStateOf<Rule?>(null)
 
-    fun executeRule(context: Context) {
+    fun executeRule(context: Context, showToast: (String) -> Unit) {
         viewModelScope.launch {
+            val latestLogBeforeExecution = Logger.logs.lastOrNull()
+
             FlowExecutor(context).run(listOf(selectedRule!!))
+
+            val recentErrorLog = Logger.logs
+                .dropWhile { it != latestLogBeforeExecution }.drop(1)
+                .firstOrNull { it.contains("[ERROR]") }
+                ?: Logger.logs.lastOrNull { it.contains("[ERROR]") }
+            if (recentErrorLog != null) {
+                showToast("Error:" + recentErrorLog.substringAfter("[ERROR]"))
+            }
         }
     }
 
