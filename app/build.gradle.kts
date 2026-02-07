@@ -31,6 +31,7 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             resValue("string", "app_name_launcher", "FileFlow Debug")
+            manifestPlaceholders["allowBackup"] = false
         }
         create("nightly") {
             isDebuggable = false
@@ -42,6 +43,7 @@ android {
             )
             applicationIdSuffix = ".nightly"
             resValue("string", "app_name_launcher", "FileFlow Nightly")
+            manifestPlaceholders["allowBackup"] = true
         }
         release {
             isDebuggable = false
@@ -51,6 +53,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard/release.pro",
             )
+            manifestPlaceholders["allowBackup"] = true
         }
     }
     buildFeatures {

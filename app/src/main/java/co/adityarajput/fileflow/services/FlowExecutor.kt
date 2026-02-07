@@ -1,13 +1,12 @@
 package co.adityarajput.fileflow.services
 
 import android.content.Context
-import androidx.core.net.toUri
-import androidx.documentfile.provider.DocumentFile
 import co.adityarajput.fileflow.data.AppContainer
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.Execution
 import co.adityarajput.fileflow.data.models.Rule
 import co.adityarajput.fileflow.utils.Logger
+import co.adityarajput.fileflow.utils.pathToFile
 import kotlinx.coroutines.flow.first
 
 class FlowExecutor(private val context: Context) {
@@ -22,52 +21,78 @@ class FlowExecutor(private val context: Context) {
             if (!rule.enabled || rule.action !is Action.MOVE) continue
 
             val regex = Regex(rule.action.srcFileNamePattern)
-            val destDir = context.pathToFile(rule.action.dest) ?: continue
+            val destDir = context.pathToFile(rule.action.dest)
 
-            for (srcFile in context.pathToFile(rule.action.src)?.listFiles() ?: arrayOf()) {
-                if (!srcFile.isFile || srcFile.name == null || !regex.matches(srcFile.name!!)) continue
+            if (destDir == null) {
+                Logger.e("FlowExecutor", "${rule.action.dest} is invalid")
+                continue
+            }
 
-                val destFileName = regex.replace(
-                    srcFile.name!!,
-                    rule.action.destFileNameTemplate,
-                )
-                val destFiles = destDir.listFiles().filter { it.isFile }
-                var destFile = destFiles.firstOrNull { it.name == destFileName }
+            val srcFile = context.pathToFile(rule.action.src)?.listFiles()
+                ?.filter { it.isFile && it.name != null && regex.matches(it.name!!) }
+                ?.maxByOrNull(rule.action.superlative.selector)
+                ?: continue
 
-                if (destFile != null) {
-                    if (!rule.action.overwriteExisting) {
-                        Logger.e("FlowExecutor", "$destFileName already exists")
+            val destFileName = regex.replace(srcFile.name!!, rule.action.destFileNameTemplate)
+            var destFile = destDir.listFiles().firstOrNull { it.isFile && it.name == destFileName }
+
+            if (destFile != null) {
+                if (!rule.action.overwriteExisting) {
+                    Logger.e("FlowExecutor", "${destFile.name} already exists")
+                    continue
+                }
+
+                resolver.openInputStream(srcFile.uri).use { src ->
+                    resolver.openInputStream(destFile.uri).use { dest ->
+                        if (src == null || dest == null) {
+                            Logger.e("FlowExecutor", "Failed to open file(s)")
+                            continue
+                        }
+
+                        if (src.readBytes().contentEquals(dest.readBytes())) {
+                            Logger.i(
+                                "FlowExecutor",
+                                "Source and destination files are identical",
+                            )
+                            continue
+                        }
+                    }
+                }
+
+                Logger.i("FlowExecutor", "Deleting existing ${destFile.name}")
+                destFile.delete()
+            }
+
+            destFile = destDir.createFile(
+                srcFile.type ?: "application/octet-stream",
+                destFileName,
+            )
+
+            if (destFile == null) {
+                Logger.e("FlowExecutor", "Failed to create $destFileName")
+                continue
+            }
+
+            resolver.openInputStream(srcFile.uri).use { src ->
+                resolver.openOutputStream(destFile.uri).use { dest ->
+                    if (src == null || dest == null) {
+                        Logger.e("FlowExecutor", "Failed to open file(s)")
                         continue
                     }
 
-                    Logger.i("FlowExecutor", "Deleting existing $destFileName")
-                    destFile.delete()
-                }
+                    Logger.i("FlowExecutor", "Copying ${srcFile.name} to ${destFile.name}")
+                    src.copyTo(dest)
+                    repository.registerExecution(
+                        rule,
+                        Execution(srcFile.name!!, rule.action.verb),
+                    )
 
-                destFile = destDir.createFile(
-                    srcFile.type ?: "application/octet-stream",
-                    destFileName,
-                ) ?: continue
-
-                resolver.openInputStream(srcFile.uri).use { src ->
-                    resolver.openOutputStream(destFile.uri).use { dest ->
-                        if (src == null || dest == null) continue
-
-                        src.copyTo(dest)
-                        Logger.i("FlowExecutor", "Copied ${srcFile.name} to ${destFile.name}")
-                        repository.registerExecution(
-                            rule,
-                            Execution(srcFile.name!!, rule.action.verb),
-                        )
-                        if (!rule.action.keepOriginal) {
-                            Logger.i("FlowExecutor", "Deleting original ${srcFile.name}")
-                            srcFile.delete()
-                        }
+                    if (!rule.action.keepOriginal) {
+                        Logger.i("FlowExecutor", "Deleting original ${srcFile.name}")
+                        srcFile.delete()
                     }
                 }
             }
         }
     }
 }
-
-fun Context.pathToFile(path: String): DocumentFile? = DocumentFile.fromTreeUri(this, path.toUri())

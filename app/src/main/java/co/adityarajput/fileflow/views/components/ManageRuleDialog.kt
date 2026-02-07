@@ -1,5 +1,6 @@
 package co.adityarajput.fileflow.views.components
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -57,9 +58,11 @@ fun ManageRuleDialog(viewModel: RulesViewModel) {
                 TextButton(
                     {
                         when (dialogState) {
-                            DialogState.EXECUTE -> viewModel.executeRule(context)
                             DialogState.TOGGLE_RULE -> viewModel.toggleRule()
                             DialogState.DELETE -> viewModel.deleteRule()
+                            DialogState.EXECUTE -> viewModel.executeRule(context) {
+                                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                            }
                         }
                         hideDialog()
                     },
