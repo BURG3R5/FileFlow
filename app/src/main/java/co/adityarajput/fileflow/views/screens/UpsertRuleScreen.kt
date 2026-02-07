@@ -22,6 +22,7 @@ import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.getGetDirectoryFromUri
 import co.adityarajput.fileflow.utils.takePersistablePermission
 import co.adityarajput.fileflow.viewmodels.FormError
+import co.adityarajput.fileflow.viewmodels.FormWarning
 import co.adityarajput.fileflow.viewmodels.Provider
 import co.adityarajput.fileflow.viewmodels.UpsertRuleViewModel
 import co.adityarajput.fileflow.views.components.AppBar
@@ -115,11 +116,6 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     val context = LocalContext.current
 
     var superlativeDropdownExpanded by remember { mutableStateOf(false) }
-    val filesInSrc = remember(viewModel.state.values.src) { viewModel.getFilesInSrc(context) }
-    val showWarning = remember(viewModel.state.values) {
-        if (viewModel.state.error != null || filesInSrc == null || filesInSrc.isEmpty()) false
-        else filesInSrc.none { Regex(viewModel.state.values.srcFileNamePattern).matches(it) }
-    }
 
     val srcPicker =
         rememberLauncherForActivityResult(
@@ -127,9 +123,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         ) { uri ->
             uri ?: return@rememberLauncherForActivityResult
             context.takePersistablePermission(uri)
-            viewModel.updateForm(
-                values = viewModel.state.values.copy(src = uri.toString()),
-            )
+            viewModel.updateForm(context, viewModel.state.values.copy(src = uri.toString()))
         }
     val destPicker =
         rememberLauncherForActivityResult(
@@ -137,9 +131,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         ) { uri ->
             uri ?: return@rememberLauncherForActivityResult
             context.takePersistablePermission(uri)
-            viewModel.updateForm(
-                values = viewModel.state.values.copy(dest = uri.toString()),
-            )
+            viewModel.updateForm(context, viewModel.state.values.copy(dest = uri.toString()))
         }
 
     Text(
@@ -161,9 +153,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     OutlinedTextField(
         viewModel.state.values.srcFileNamePattern,
         {
-            viewModel.updateForm(
-                viewModel.state.values.copy(srcFileNamePattern = it),
-            )
+            viewModel.updateForm(context, viewModel.state.values.copy(srcFileNamePattern = it))
         },
         Modifier.fillMaxWidth(),
         label = {
@@ -171,13 +161,14 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         },
         placeholder = { Text(stringResource(R.string.pattern_placeholder)) },
         supportingText = {
-            if (filesInSrc == null || filesInSrc.isEmpty())
+            if (viewModel.state.values.currentSrcFileNames?.isEmpty() ?: true)
                 Text(stringResource(R.string.match_entire_filename))
             else
                 Text(
                     stringResource(
                         R.string.pattern_should_match,
-                        filesInSrc.joinToString(stringResource(R.string.or), limit = 3),
+                        viewModel.state.values.currentSrcFileNames!!
+                            .joinToString(stringResource(R.string.or), limit = 3),
                     ),
                 )
         },
@@ -190,7 +181,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     )
     Row(
         Modifier.toggleable(!viewModel.state.values.keepOriginal) {
-            viewModel.updateForm(viewModel.state.values.copy(keepOriginal = !it))
+            viewModel.updateForm(context, viewModel.state.values.copy(keepOriginal = !it))
         },
         Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
         Alignment.Top,
@@ -219,7 +210,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 DropdownMenuItem(
                     { Text(stringResource(it.displayName)) },
                     {
-                        viewModel.updateForm(viewModel.state.values.copy(superlative = it))
+                        viewModel.updateForm(context, viewModel.state.values.copy(superlative = it))
                         superlativeDropdownExpanded = false
                     },
                 )
@@ -250,15 +241,23 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     OutlinedTextField(
         viewModel.state.values.destFileNameTemplate,
         {
-            viewModel.updateForm(
-                viewModel.state.values.copy(destFileNameTemplate = it),
-            )
+            viewModel.updateForm(context, viewModel.state.values.copy(destFileNameTemplate = it))
         },
         Modifier.fillMaxWidth(),
         label = {
             Text(stringResource(R.string.file_name_template))
         },
         placeholder = { Text(stringResource(R.string.template_placeholder)) },
+        supportingText = {
+            if (viewModel.state.values.predictedDestFileNames?.isNotEmpty() ?: false)
+                Text(
+                    stringResource(
+                        R.string.template_will_yield,
+                        viewModel.state.values.predictedDestFileNames!!
+                            .joinToString(stringResource(R.string.or), limit = 3),
+                    ),
+                )
+        },
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
             unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -268,7 +267,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     )
     Row(
         Modifier.toggleable(viewModel.state.values.overwriteExisting) {
-            viewModel.updateForm(viewModel.state.values.copy(overwriteExisting = it))
+            viewModel.updateForm(context, viewModel.state.values.copy(overwriteExisting = it))
         },
         Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
         Alignment.Top,
@@ -294,5 +293,6 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         fontWeight = FontWeight.Normal,
     )
     if (viewModel.state.error == FormError.INVALID_REGEX) ErrorText(R.string.invalid_regex)
-    if (showWarning) WarningText(R.string.pattern_doesnt_match_src_files)
+    else if (viewModel.state.error == FormError.INVALID_TEMPLATE) ErrorText(R.string.invalid_template)
+    else if (viewModel.state.warning == FormWarning.NO_MATCHES_IN_SRC) WarningText(R.string.pattern_doesnt_match_src_files)
 }
