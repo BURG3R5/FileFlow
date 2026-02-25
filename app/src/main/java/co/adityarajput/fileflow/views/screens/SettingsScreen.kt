@@ -159,6 +159,7 @@ fun SettingsScreen(
                     ) {
                         Text(
                             stringResource(R.string.app_theme),
+                            Modifier.padding(end = dimensionResource(R.dimen.padding_small)),
                             style = MaterialTheme.typography.titleSmall,
                         )
                         SingleChoiceSegmentedButtonRow {
