@@ -35,12 +35,12 @@ fun AppBar(
                 if (canNavigateBack) {
                     Icon(
                         painterResource(R.drawable.arrow_back),
-                        stringResource(R.string.alttext_back_button),
+                        stringResource(R.string.back_button),
                     )
                 } else {
                     Icon(
                         painterResource(R.drawable.automation),
-                        stringResource(R.string.alttext_app_logo),
+                        stringResource(R.string.app_logo),
                     )
                 }
             }
