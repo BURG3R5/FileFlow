@@ -49,7 +49,7 @@ fun AboutScreen(goBack: () -> Unit) {
                         ) {
                             Icon(
                                 painterResource(R.drawable.automation),
-                                stringResource(R.string.alttext_app_logo),
+                                stringResource(R.string.app_logo),
                                 Modifier.size(50.dp),
                             )
                         }

@@ -217,7 +217,7 @@ fun SettingsScreen(
                         ) {
                             Icon(
                                 painterResource(R.drawable.list_alt),
-                                stringResource(R.string.alttext_logs),
+                                stringResource(R.string.logs),
                             )
                             Text(
                                 stringResource(R.string.copy_logs),
@@ -247,7 +247,7 @@ fun SettingsScreen(
                         ) {
                             Icon(
                                 painterResource(R.drawable.info),
-                                stringResource(R.string.alttext_info),
+                                stringResource(R.string.info),
                             )
                             Text(
                                 stringResource(R.string.about_app),

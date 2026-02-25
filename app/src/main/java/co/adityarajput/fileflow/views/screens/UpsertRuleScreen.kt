@@ -222,7 +222,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     }
     Icon(
         painterResource(R.drawable.arrow_down),
-        stringResource(R.string.alttext_arrow_down),
+        stringResource(R.string.arrow_down),
         Modifier.align(Alignment.CenterHorizontally),
     )
     Text(
