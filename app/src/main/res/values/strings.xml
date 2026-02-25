@@ -19,6 +19,7 @@
     <string name="dark">Dark</string>
     <string name="copy_logs">Copy logs</string>
     <string name="copy_success">Logs copied to clipboard</string>
+    <string name="view_licenses">View licenses</string>
     <string name="about_app">About FileFlow</string>
 
     <string name="add_rule">Add rule</string>
@@ -63,6 +64,10 @@
 
     <string name="history">History</string>
     <string name="no_executions">No executions yet.</string>
+
+    <!-- region LicensesScreen -->
+    <string name="licenses">Licenses</string>
+    <!-- endregion -->
 
     <string name="about">About</string>
     <string name="app_description">" scans your files periodically and organizes them according to your rules."</string>
