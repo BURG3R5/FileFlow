@@ -1,0 +1,4 @@
+• fix: Make "UpsertRuleScreen" scrollable
+• chore: Display licenses using "AboutLibraries"
+• chore: Update dependencies
+• fix: Remove and mention permissions added by "WorkManager"
