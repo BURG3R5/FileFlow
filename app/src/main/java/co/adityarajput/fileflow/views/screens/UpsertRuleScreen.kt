@@ -22,7 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.getGetDirectoryFromUri
-import co.adityarajput.fileflow.utils.takePersistablePermission
+import co.adityarajput.fileflow.utils.requestPersistableFolderPermission
 import co.adityarajput.fileflow.viewmodels.FormError
 import co.adityarajput.fileflow.viewmodels.FormWarning
 import co.adityarajput.fileflow.viewmodels.Provider
@@ -125,7 +125,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
             ActivityResultContracts.OpenDocumentTree(),
         ) { uri ->
             uri ?: return@rememberLauncherForActivityResult
-            context.takePersistablePermission(uri)
+            context.requestPersistableFolderPermission(uri)
             viewModel.updateForm(context, viewModel.state.values.copy(src = uri.toString()))
         }
     val destPicker =
@@ -133,7 +133,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
             ActivityResultContracts.OpenDocumentTree(),
         ) { uri ->
             uri ?: return@rememberLauncherForActivityResult
-            context.takePersistablePermission(uri)
+            context.requestPersistableFolderPermission(uri)
             viewModel.updateForm(context, viewModel.state.values.copy(dest = uri.toString()))
         }
 
