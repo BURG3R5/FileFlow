@@ -24,7 +24,7 @@ fun Context.isGranted(permission: Permission) = when (permission) {
             .isIgnoringBatteryOptimizations(packageName)
 
     Permission.MANAGE_EXTERNAL_STORAGE ->
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) true
         else Environment.isExternalStorageManager()
 }
 
