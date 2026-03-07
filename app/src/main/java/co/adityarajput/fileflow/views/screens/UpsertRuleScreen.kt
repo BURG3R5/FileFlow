@@ -20,16 +20,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
 import co.adityarajput.fileflow.R
-import co.adityarajput.fileflow.utils.FileSuperlative
-import co.adityarajput.fileflow.utils.getGetDirectoryFromUri
-import co.adityarajput.fileflow.utils.requestPersistableFolderPermission
+import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.viewmodels.FormError
 import co.adityarajput.fileflow.viewmodels.FormWarning
 import co.adityarajput.fileflow.viewmodels.Provider
 import co.adityarajput.fileflow.viewmodels.UpsertRuleViewModel
-import co.adityarajput.fileflow.views.components.AppBar
-import co.adityarajput.fileflow.views.components.ErrorText
-import co.adityarajput.fileflow.views.components.WarningText
+import co.adityarajput.fileflow.views.components.*
 import kotlinx.coroutines.launch
 
 @Composable
@@ -111,12 +107,14 @@ fun UpsertRuleScreen(
                 }
             }
         }
+        if (viewModel.folderPickerState != null) FolderPickerBottomSheet(viewModel)
     }
 }
 
 @Composable
 private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     val context = LocalContext.current
+    val shouldUseCustomPicker = remember { context.isGranted(Permission.MANAGE_EXTERNAL_STORAGE) }
 
     var superlativeDropdownExpanded by remember { mutableStateOf(false) }
 
@@ -149,7 +147,10 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         },
         Modifier
             .fillMaxWidth()
-            .clickable { srcPicker.launch(null) },
+            .clickable {
+                if (shouldUseCustomPicker) viewModel.folderPickerState = FolderPickerState.SRC
+                else srcPicker.launch(null)
+            },
         style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.Normal,
     )
@@ -237,7 +238,10 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         },
         Modifier
             .fillMaxWidth()
-            .clickable { destPicker.launch(null) },
+            .clickable {
+                if (shouldUseCustomPicker) viewModel.folderPickerState = FolderPickerState.DEST
+                else destPicker.launch(null)
+            },
         style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.Normal,
     )

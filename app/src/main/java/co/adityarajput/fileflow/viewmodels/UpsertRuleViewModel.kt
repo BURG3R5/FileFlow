@@ -8,9 +8,10 @@ import androidx.lifecycle.ViewModel
 import co.adityarajput.fileflow.data.Repository
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.Rule
+import co.adityarajput.fileflow.utils.File
 import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.Logger
-import co.adityarajput.fileflow.utils.pathToFile
+import co.adityarajput.fileflow.views.components.FolderPickerState
 
 class UpsertRuleViewModel(
     rule: Rule?,
@@ -54,11 +55,13 @@ class UpsertRuleViewModel(
         else State(Values(rule), null),
     )
 
+    var folderPickerState by mutableStateOf<FolderPickerState?>(null)
+
     fun updateForm(context: Context, values: Values) {
         var currentSrcFileNames: List<String>? = null
         try {
             if (values.src.isNotBlank())
-                currentSrcFileNames = context.pathToFile(values.src)!!.listFiles()
+                currentSrcFileNames = File.fromPath(context, values.src)!!.listFiles()
                     .filter { it.isFile && it.name != null }.map { it.name!! }
         } catch (e: Exception) {
             Logger.e("UpsertRuleViewModel", "Couldn't fetch files in ${values.src}", e)
@@ -94,7 +97,8 @@ class UpsertRuleViewModel(
                 values.destFileNameTemplate.isBlank()
             ) return FormError.BLANK_FIELDS
 
-            Regex(values.srcFileNamePattern).pattern == values.srcFileNamePattern
+            if (Regex(values.srcFileNamePattern).pattern != values.srcFileNamePattern)
+                return FormError.INVALID_REGEX
 
             if (values.predictedDestFileNames == null) return FormError.INVALID_TEMPLATE
         } catch (_: Exception) {

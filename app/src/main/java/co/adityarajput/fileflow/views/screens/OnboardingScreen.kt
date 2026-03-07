@@ -69,7 +69,7 @@ fun OnboardingScreen(goToRulesScreen: () -> Unit = {}) {
                     TextButton({ hasSkipped = true }) {
                         Text(stringResource(R.string.skip))
                     }
-                } else if (!hasPermissions.getValue(Permission.MANAGE_EXTERNAL_STORAGE) && !hasSkipped) {
+                } else if (!hasPermissions.getValue(Permission.MANAGE_EXTERNAL_STORAGE)) {
                     Text(stringResource(R.string.onboarding_info_2))
                     Button(
                         { context.request(Permission.MANAGE_EXTERNAL_STORAGE) },

@@ -103,6 +103,13 @@
     <string name="invalid_regex">Regex pattern contains errors</string>
     <string name="invalid_template">Regex template contains errors</string>
     <string name="pattern_doesnt_match_src_files">Regex pattern doesn\'t match any file in the source folder</string>
+    <!-- region FolderPickerBottomSheet -->
+    <string name="parent_directory">Back</string>
+    <string name="empty_folder">(Empty)</string>
+    <string name="folder">Folder</string>
+    <string name="file">File</string>
+    <string name="use_this_folder">Use this folder</string>
+    <!-- endregion -->
     <!-- region Files -->
     <string name="earliest">earliest</string>
     <string name="latest">latest</string>

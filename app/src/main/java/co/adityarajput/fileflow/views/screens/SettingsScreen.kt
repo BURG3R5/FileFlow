@@ -117,27 +117,26 @@ fun SettingsScreen(
                                 { context.request(Permission.UNRESTRICTED_BACKGROUND_USAGE) },
                             )
                         }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
-                                Alignment.CenterVertically,
-                            ) {
-                                Column(Modifier.weight(1f)) {
-                                    Text(
-                                        stringResource(R.string.all_files_access),
-                                        style = MaterialTheme.typography.titleSmall,
-                                    )
-                                    Text(
-                                        stringResource(R.string.explain_all_files_access),
-                                        style = MaterialTheme.typography.bodySmall,
-                                    )
-                                }
-                                Switch(
-                                    hasPermissions.getValue(Permission.MANAGE_EXTERNAL_STORAGE),
-                                    { context.request(Permission.MANAGE_EXTERNAL_STORAGE) },
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                            Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.all_files_access),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    stringResource(R.string.explain_all_files_access),
+                                    style = MaterialTheme.typography.bodySmall,
                                 )
                             }
+                            Switch(
+                                hasPermissions.getValue(Permission.MANAGE_EXTERNAL_STORAGE),
+                                { context.request(Permission.MANAGE_EXTERNAL_STORAGE) },
+                            )
+                        }
                     }
                 }
                 Card(

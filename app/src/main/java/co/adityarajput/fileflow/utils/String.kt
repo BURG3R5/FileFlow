@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import co.adityarajput.fileflow.R
-import java.net.URLDecoder
 
 @Composable
 fun Long.toShortHumanReadableTime(): String {
@@ -29,5 +28,3 @@ fun Long.toShortHumanReadableTime(): String {
 @Composable
 fun Boolean.getToggleString(): String =
     stringResource(if (this) R.string.disable else R.string.enable)
-
-fun String.getGetDirectoryFromUri() = URLDecoder.decode(this, "UTF-8").split(":").last()
