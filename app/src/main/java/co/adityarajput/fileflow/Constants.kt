@@ -1,6 +1,9 @@
 package co.adityarajput.fileflow
 
 object Constants {
+    const val STATE = "state"
+    const val IS_FIRST_RUN = "is_first_run"
+
     const val SETTINGS = "settings"
     const val BRIGHTNESS = "brightness"
 

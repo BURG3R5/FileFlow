@@ -1,13 +1,10 @@
 package co.adityarajput.fileflow.views.screens
 
-import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.Context.MODE_PRIVATE
-import android.content.Intent
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -25,18 +22,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.edit
-import androidx.core.net.toUri
 import co.adityarajput.fileflow.Constants.BRIGHTNESS
 import co.adityarajput.fileflow.Constants.SETTINGS
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.utils.Logger
-import co.adityarajput.fileflow.utils.hasUnrestrictedBackgroundUsagePermission
+import co.adityarajput.fileflow.utils.Permission
+import co.adityarajput.fileflow.utils.isGranted
+import co.adityarajput.fileflow.utils.request
 import co.adityarajput.fileflow.viewmodels.AppearanceViewModel
 import co.adityarajput.fileflow.views.Brightness
 import co.adityarajput.fileflow.views.components.AppBar
 import kotlinx.coroutines.launch
 
-@SuppressLint("BatteryLife")
+private val permissions = listOf(
+    Permission.UNRESTRICTED_BACKGROUND_USAGE,
+    Permission.MANAGE_EXTERNAL_STORAGE,
+)
+
 @Composable
 fun SettingsScreen(
     goToLicensesScreen: () -> Unit = {},
@@ -51,13 +53,11 @@ fun SettingsScreen(
     val sharedPreferences =
         remember { context.getSharedPreferences(SETTINGS, MODE_PRIVATE) }
 
-    var isInvincible by remember {
-        mutableStateOf(context.hasUnrestrictedBackgroundUsagePermission())
-    }
+    var hasPermissions by remember { mutableStateOf(context.isGranted(permissions)) }
 
     val watcher = object : Runnable {
         override fun run() {
-            isInvincible = context.hasUnrestrictedBackgroundUsagePermission()
+            hasPermissions = context.isGranted(permissions)
             handler.postDelayed(this, 1000)
         }
     }
@@ -86,51 +86,57 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(dimensionResource(R.dimen.padding_small)),
                 ) {
-                    Text(
-                        stringResource(R.string.settings_section_1),
+                    Column(
                         Modifier.padding(
                             dimensionResource(R.dimen.padding_large),
                             dimensionResource(R.dimen.padding_medium),
                         ),
-                        fontWeight = FontWeight.Medium,
-                    )
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = dimensionResource(R.dimen.padding_large),
-                                end = dimensionResource(R.dimen.padding_large),
-                                bottom = dimensionResource(R.dimen.padding_medium),
-                            ),
-                        Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
-                        Alignment.CenterVertically,
+                        Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium)),
                     ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                stringResource(R.string.disable_battery_optimization),
-                                style = MaterialTheme.typography.titleSmall,
-                            )
-                            Text(
-                                stringResource(R.string.explain_disabling_battery_optimization),
-                                style = MaterialTheme.typography.bodySmall,
+                        Text(
+                            stringResource(R.string.settings_section_1),
+                            fontWeight = FontWeight.Medium,
+                        )
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                            Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.disable_battery_optimization),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    stringResource(R.string.explain_disabling_battery_optimization),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            Switch(
+                                hasPermissions.getValue(Permission.UNRESTRICTED_BACKGROUND_USAGE),
+                                { context.request(Permission.UNRESTRICTED_BACKGROUND_USAGE) },
                             )
                         }
-                        Switch(
-                            isInvincible,
-                            {
-                                if (it) {
-                                    val intent = Intent(
-                                        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                                        "package:${context.packageName}".toUri(),
-                                    )
-                                    context.startActivity(intent)
-                                } else {
-                                    val intent =
-                                        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                                    context.startActivity(intent)
-                                }
-                            },
-                        )
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                            Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.all_files_access),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    stringResource(R.string.explain_all_files_access),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            Switch(
+                                hasPermissions.getValue(Permission.MANAGE_EXTERNAL_STORAGE),
+                                { context.request(Permission.MANAGE_EXTERNAL_STORAGE) },
+                            )
+                        }
                     }
                 }
                 Card(
