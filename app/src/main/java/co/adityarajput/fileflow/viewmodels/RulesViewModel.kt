@@ -36,7 +36,6 @@ class RulesViewModel(private val repository: Repository) : ViewModel() {
             val recentErrorLog = Logger.logs
                 .dropWhile { it != latestLogBeforeExecution }.drop(1)
                 .firstOrNull { it.contains("[ERROR]") }
-                ?: Logger.logs.lastOrNull { it.contains("[ERROR]") }
             if (recentErrorLog != null) {
                 showToast("Error:" + recentErrorLog.substringAfter("[ERROR]"))
             }
