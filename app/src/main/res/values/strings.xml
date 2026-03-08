@@ -18,8 +18,9 @@
     <!-- region ExecutionsScreen -->
     <string name="history">History</string>
     <string name="no_executions">No executions yet.</string>
+    <string name="ago">%1$s ago</string>
     <!-- region String -->
-    <string name="many_days_ago">"1k+ days ago"</string>
+    <string name="many_days">"1k+ days"</string>
     <string name="just_now">just now</string>
     <!-- endregion -->
     <!-- endregion -->
@@ -55,8 +56,9 @@
     <string name="delete">Delete</string>
     <!-- endregion -->
     <!-- region Action -->
-    <string name="move">MOVE</string>
     <string name="copy">COPY</string>
+    <string name="move">MOVE</string>
+    <string name="delete_stale">DELETE</string>
     <!-- endregion -->
     <!-- endregion -->
 
@@ -84,6 +86,7 @@
     <string name="cancel">Cancel</string>
     <string name="add">Add</string>
     <string name="save">Save</string>
+    <string name="action">Action:</string>
     <string name="source">"Source: "</string>
     <string name="select_folder">select folder</string>
     <string name="file_name_pattern">File name pattern</string>
@@ -99,10 +102,16 @@
     <string name="template_placeholder">Enter a regex template</string>
     <string name="template_will_yield">Template will yield %1$s</string>
     <string name="overwrite_existing">Overwrite existing files in the destination, in case of conflict</string>
+    <string name="retention_days">Mark stale if unmodified for</string>
+    <string name="days">days</string>
     <string name="pattern_advice"><![CDATA[Click <a href=\"https://github.com/BURG3R5/FileFlow/wiki/Examples\">here↗</a> for example patterns and templates.]]></string>
     <string name="invalid_regex">Regex pattern contains errors</string>
     <string name="invalid_template">Regex template contains errors</string>
     <string name="pattern_doesnt_match_src_files">Regex pattern doesn\'t match any file in the source folder</string>
+    <!-- region Action -->
+    <string name="move_phrase">Copy or move to another folder</string>
+    <string name="delete_stale_phrase">Delete if unmodified for a while</string>
+    <!-- endregion -->
     <!-- region FolderPickerBottomSheet -->
     <string name="parent_directory">Back</string>
     <string name="empty_folder">(Empty)</string>
@@ -115,6 +124,7 @@
     <string name="latest">latest</string>
     <string name="smallest">smallest</string>
     <string name="largest">largest</string>
+    <string name="all">all</string>
     <!-- endregion -->
     <!-- endregion -->
 </resources>

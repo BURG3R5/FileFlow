@@ -25,6 +25,7 @@ class UpsertRuleViewModel(
 
     data class Values(
         val ruleId: Int = 0,
+        val actionBase: Action = Action.entries[0],
         val src: String = "",
         val srcFileNamePattern: String = "",
         val dest: String = "",
@@ -34,25 +35,44 @@ class UpsertRuleViewModel(
         val overwriteExisting: Boolean = false,
         val currentSrcFileNames: List<String>? = null,
         val predictedDestFileNames: List<String>? = null,
+        val retentionDays: Int = 30,
     ) {
-        constructor(rule: Rule) : this(
-            rule.id, (rule.action as Action.MOVE).src, rule.action.srcFileNamePattern,
-            rule.action.dest, rule.action.destFileNameTemplate, rule.action.superlative,
-            rule.action.keepOriginal, rule.action.overwriteExisting,
-        )
+        companion object {
+            fun from(rule: Rule) = when (rule.action) {
+                is Action.MOVE ->
+                    Values(
+                        rule.id, rule.action.base, rule.action.src,
+                        rule.action.srcFileNamePattern, rule.action.dest,
+                        rule.action.destFileNameTemplate, rule.action.superlative,
+                        rule.action.keepOriginal, rule.action.overwriteExisting,
+                    )
 
-        fun toRule() = Rule(
-            Action.MOVE(
-                src, srcFileNamePattern, dest, destFileNameTemplate,
-                keepOriginal, overwriteExisting, superlative,
-            ),
-            id = ruleId,
-        )
+                is Action.DELETE_STALE ->
+                    Values(
+                        rule.id, rule.action.base, rule.action.src,
+                        rule.action.srcFileNamePattern, retentionDays = rule.action.retentionDays,
+                    )
+            }
+        }
+
+        fun toRule() = when (actionBase) {
+            is Action.MOVE ->
+                Rule(
+                    Action.MOVE(
+                        src, srcFileNamePattern, dest, destFileNameTemplate, keepOriginal,
+                        overwriteExisting, superlative,
+                    ),
+                    id = ruleId,
+                )
+
+            is Action.DELETE_STALE ->
+                Rule(Action.DELETE_STALE(src, srcFileNamePattern, retentionDays), id = ruleId)
+        }
     }
 
     var state by mutableStateOf(
         if (rule == null) State()
-        else State(Values(rule), null),
+        else State(Values.from(rule), null),
     )
 
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
@@ -69,16 +89,17 @@ class UpsertRuleViewModel(
 
         var predictedDestFileNames: List<String>? = null
         var warning: FormWarning? = null
-        try {
-            val regex = Regex(values.srcFileNamePattern)
+        if (currentSrcFileNames != null && values.destFileNameTemplate.isNotBlank()) {
+            try {
+                val regex = Regex(values.srcFileNamePattern)
 
-            if (values.destFileNameTemplate.isNotBlank())
                 predictedDestFileNames = currentSrcFileNames
-                    ?.filter { regex.matches(it) }
-                    ?.also { if (it.isEmpty()) warning = FormWarning.NO_MATCHES_IN_SRC }
-                    ?.map { regex.replace(it, values.destFileNameTemplate) }
-                    ?.distinct()
-        } catch (_: Exception) {
+                    .filter { regex.matches(it) }
+                    .also { if (it.isEmpty()) warning = FormWarning.NO_MATCHES_IN_SRC }
+                    .map { regex.replace(it, values.destFileNameTemplate) }
+                    .distinct()
+            } catch (_: Exception) {
+            }
         }
 
         val values = values.copy(
@@ -90,17 +111,18 @@ class UpsertRuleViewModel(
 
     private fun getError(values: Values): FormError? {
         try {
-            if (
-                values.src.isBlank() ||
-                values.srcFileNamePattern.isBlank() ||
-                values.dest.isBlank() ||
-                values.destFileNameTemplate.isBlank()
-            ) return FormError.BLANK_FIELDS
+            if (values.src.isBlank() || values.srcFileNamePattern.isBlank())
+                return FormError.BLANK_FIELDS
 
             if (Regex(values.srcFileNamePattern).pattern != values.srcFileNamePattern)
                 return FormError.INVALID_REGEX
 
-            if (values.predictedDestFileNames == null) return FormError.INVALID_TEMPLATE
+            if (values.actionBase is Action.MOVE) {
+                if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
+                    return FormError.BLANK_FIELDS
+                if (values.predictedDestFileNames == null)
+                    return FormError.INVALID_TEMPLATE
+            }
         } catch (_: Exception) {
             Logger.d("UpsertRuleViewModel", "Invalid regex")
             return FormError.INVALID_REGEX

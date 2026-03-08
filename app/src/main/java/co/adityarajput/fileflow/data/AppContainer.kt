@@ -25,9 +25,9 @@ class AppContainer(private val context: Context) {
                 repository.upsert(
                     Rule(
                         Action.MOVE(
-                            "content://com.android.externalstorage.documents/tree/primary%3AAntennaPod",
+                            "/storage/emulated/0/AntennaPod",
                             "AntennaPodBackup-\\d{4}-\\d{2}-\\d{2}.db",
-                            "content://com.android.externalstorage.documents/tree/primary%3ABackups",
+                            "/storage/emulated/0/Backups",
                             "AntennaPod.db",
                             overwriteExisting = true,
                         ),
@@ -35,14 +35,21 @@ class AppContainer(private val context: Context) {
                     ),
                     Rule(
                         Action.MOVE(
-                            "content://com.android.externalstorage.documents/tree/primary%3ABackups",
+                            "/storage/emulated/0/Backups",
                             "TubularData-\\d{8}_\\d{6}.zip",
-                            "content://com.android.externalstorage.documents/tree/primary%3ABackups",
+                            "/storage/emulated/0/Backups",
                             "Tubular.zip",
                             keepOriginal = false,
                             overwriteExisting = true,
                         ),
                         executions = 3,
+                    ),
+                    Rule(
+                        Action.DELETE_STALE(
+                            "/storage/emulated/0/Download",
+                            "Alarmetrics_v[\\d\\.]+.apk",
+                        ),
+                        enabled = false,
                     ),
                 )
                 repository.upsert(

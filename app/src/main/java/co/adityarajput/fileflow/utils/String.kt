@@ -7,16 +7,13 @@ import co.adityarajput.fileflow.R
 
 @Composable
 fun Long.toShortHumanReadableTime(): String {
-    val now = System.currentTimeMillis()
-    val delta = now - this
-
-    val seconds = delta / 1000
+    val seconds = this / 1000
     val minutes = seconds / 60
     val hours = minutes / 60
     val days = hours / 24
 
     return when {
-        days > 1000 -> stringResource(R.string.many_days_ago)
+        days > 1000 -> stringResource(R.string.many_days)
         days > 0 -> pluralStringResource(R.plurals.day, days.toInt(), days)
         hours > 0 -> pluralStringResource(R.plurals.hour, hours.toInt(), hours)
         minutes > 0 -> pluralStringResource(R.plurals.minute, minutes.toInt(), minutes)

@@ -12,6 +12,6 @@ class Converters {
     fun toAction(value: String) = try {
         Json.decodeFromString<Action>(value)
     } catch (_: Exception) {
-        Action.MOVE("", "", "", "")
+        Action.entries[0]
     }
 }

@@ -86,7 +86,7 @@ fun RulesScreen(
             ) {
                 items(state.value.rules!!, { it.id }) {
                     Tile(
-                        it.action.title,
+                        it.action.srcFileNamePattern,
                         stringResource(it.action.verb),
                         if (!it.enabled) stringResource(R.string.disabled)
                         else pluralStringResource(
@@ -96,7 +96,7 @@ fun RulesScreen(
                         ),
                         {
                             Text(
-                                it.action.description,
+                                it.action.getDescription(),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         },
