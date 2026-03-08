@@ -7,4 +7,5 @@ enum class FileSuperlative(val displayName: Int, val selector: (File) -> Long) {
     LATEST(R.string.latest, { it.lastModified() }),
     SMALLEST(R.string.smallest, { -it.length() }),
     LARGEST(R.string.largest, { it.length() }),
+    NONE(R.string.all, { 0L })
 }

@@ -64,7 +64,10 @@ fun ExecutionsScreen(
                     Tile(
                         it.fileName,
                         stringResource(it.actionVerb),
-                        it.timestamp.toShortHumanReadableTime(),
+                        stringResource(
+                            R.string.ago,
+                            (System.currentTimeMillis() - it.timestamp).toShortHumanReadableTime(),
+                        ),
                     )
                 }
             }

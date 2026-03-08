@@ -15,7 +15,10 @@ FileFlow scans your files periodically and organizes them according to your rule
 ## Features
 
 - **Rules** - Use [regex](https://github.com/BURG3R5/FileFlow/wiki/Examples) to precisely target
-  files and template strings to rename them 🎯
+  files 🎯
+- **Actions** - Choose what to do to your files ⚙
+  1. Copy, move, or rename files 📁
+  2. Delete stale files 🗑
 - **History** - Recent executions are stored (locally) ⏳
 - **Free, open-source & private**
     - No ads, subscriptions, or in-app purchases 🆓

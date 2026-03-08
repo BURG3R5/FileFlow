@@ -5,7 +5,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,9 +19,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
 import co.adityarajput.fileflow.R
+import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.viewmodels.FormError
 import co.adityarajput.fileflow.viewmodels.FormWarning
@@ -118,23 +122,50 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
 
     var superlativeDropdownExpanded by remember { mutableStateOf(false) }
 
-    val srcPicker =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.OpenDocumentTree(),
-        ) { uri ->
-            uri ?: return@rememberLauncherForActivityResult
-            context.requestPersistableFolderPermission(uri)
-            viewModel.updateForm(context, viewModel.state.values.copy(src = uri.toString()))
-        }
-    val destPicker =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.OpenDocumentTree(),
-        ) { uri ->
-            uri ?: return@rememberLauncherForActivityResult
-            context.requestPersistableFolderPermission(uri)
-            viewModel.updateForm(context, viewModel.state.values.copy(dest = uri.toString()))
-        }
+    val srcPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        context.requestPersistableFolderPermission(uri)
+        viewModel.updateForm(context, viewModel.state.values.copy(src = uri.toString()))
+    }
+    val destPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        context.requestPersistableFolderPermission(uri)
+        viewModel.updateForm(context, viewModel.state.values.copy(dest = uri.toString()))
+    }
 
+    Text(
+        stringResource(R.string.action),
+        style = MaterialTheme.typography.bodyLarge,
+        fontWeight = FontWeight.Normal,
+    )
+    Action.entries.forEach {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .selectable(it isSimilarTo viewModel.state.values.actionBase) {
+                    viewModel.updateForm(
+                        context,
+                        viewModel.state.values.copy(actionBase = it),
+                    )
+                },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RadioButton(
+                it isSimilarTo viewModel.state.values.actionBase,
+                null,
+                Modifier.padding(horizontal = dimensionResource(R.dimen.padding_small)),
+            )
+            Text(
+                stringResource(it.phrase),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Normal,
+            )
+        }
+    }
     Text(
         buildAnnotatedString {
             append(stringResource(R.string.source))
@@ -183,108 +214,146 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         ),
         singleLine = true,
     )
-    Row(
-        Modifier.toggleable(!viewModel.state.values.keepOriginal) {
-            viewModel.updateForm(context, viewModel.state.values.copy(keepOriginal = !it))
-        },
-        Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
-        Alignment.Top,
-    ) {
-        Checkbox(!viewModel.state.values.keepOriginal, null)
-        Text(
-            stringResource(R.string.delete_original),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Normal,
-        )
-    }
-    Box {
-        Text(
-            buildAnnotatedString {
-                append(stringResource(R.string.choose_superlative))
-                withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
-                    append(stringResource(viewModel.state.values.superlative.displayName))
-                }
-            },
-            Modifier.clickable { superlativeDropdownExpanded = true },
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Normal,
-        )
-        DropdownMenu(superlativeDropdownExpanded, { superlativeDropdownExpanded = false }) {
-            FileSuperlative.entries.forEach {
-                DropdownMenuItem(
-                    { Text(stringResource(it.displayName)) },
-                    {
-                        viewModel.updateForm(context, viewModel.state.values.copy(superlative = it))
-                        superlativeDropdownExpanded = false
+    when (viewModel.state.values.actionBase) {
+        is Action.MOVE -> {
+            Row(
+                Modifier.toggleable(!viewModel.state.values.keepOriginal) {
+                    viewModel.updateForm(context, viewModel.state.values.copy(keepOriginal = !it))
+                },
+                Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                Alignment.Top,
+            ) {
+                Checkbox(!viewModel.state.values.keepOriginal, null)
+                Text(
+                    stringResource(R.string.delete_original),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Normal,
+                )
+            }
+            Box {
+                Text(
+                    buildAnnotatedString {
+                        append(stringResource(R.string.choose_superlative))
+                        withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
+                            append(stringResource(viewModel.state.values.superlative.displayName))
+                        }
                     },
+                    Modifier.clickable { superlativeDropdownExpanded = true },
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Normal,
+                )
+                DropdownMenu(superlativeDropdownExpanded, { superlativeDropdownExpanded = false }) {
+                    FileSuperlative.entries.forEach {
+                        DropdownMenuItem(
+                            { Text(stringResource(it.displayName)) },
+                            {
+                                viewModel.updateForm(
+                                    context,
+                                    viewModel.state.values.copy(superlative = it),
+                                )
+                                superlativeDropdownExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+            Icon(
+                painterResource(R.drawable.arrow_down),
+                stringResource(R.string.arrow_down),
+                Modifier.align(Alignment.CenterHorizontally),
+            )
+            Text(
+                buildAnnotatedString {
+                    append(stringResource(R.string.destination))
+                    withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
+                        append(
+                            viewModel.state.values.dest.getGetDirectoryFromUri()
+                                .ifBlank { stringResource(R.string.select_folder) },
+                        )
+                    }
+                },
+                Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        if (shouldUseCustomPicker) viewModel.folderPickerState =
+                            FolderPickerState.DEST
+                        else destPicker.launch(null)
+                    },
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Normal,
+            )
+            OutlinedTextField(
+                viewModel.state.values.destFileNameTemplate,
+                {
+                    viewModel.updateForm(
+                        context,
+                        viewModel.state.values.copy(destFileNameTemplate = it),
+                    )
+                },
+                Modifier.fillMaxWidth(),
+                label = {
+                    Text(stringResource(R.string.file_name_template))
+                },
+                placeholder = { Text(stringResource(R.string.template_placeholder)) },
+                supportingText = {
+                    if (viewModel.state.values.predictedDestFileNames?.isNotEmpty() ?: false)
+                        Text(
+                            stringResource(
+                                R.string.template_will_yield,
+                                viewModel.state.values.predictedDestFileNames!!
+                                    .joinToString(stringResource(R.string.or), limit = 3),
+                            ),
+                        )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                ),
+                singleLine = true,
+            )
+            Row(
+                Modifier.toggleable(viewModel.state.values.overwriteExisting) {
+                    viewModel.updateForm(
+                        context,
+                        viewModel.state.values.copy(overwriteExisting = it),
+                    )
+                },
+                Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                Alignment.Top,
+            ) {
+                Checkbox(viewModel.state.values.overwriteExisting, null)
+                Text(
+                    stringResource(R.string.overwrite_existing),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Normal,
                 )
             }
         }
-    }
-    Icon(
-        painterResource(R.drawable.arrow_down),
-        stringResource(R.string.arrow_down),
-        Modifier.align(Alignment.CenterHorizontally),
-    )
-    Text(
-        buildAnnotatedString {
-            append(stringResource(R.string.destination))
-            withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
-                append(
-                    viewModel.state.values.dest.getGetDirectoryFromUri()
-                        .ifBlank { stringResource(R.string.select_folder) },
-                )
-            }
-        },
-        Modifier
-            .fillMaxWidth()
-            .clickable {
-                if (shouldUseCustomPicker) viewModel.folderPickerState = FolderPickerState.DEST
-                else destPicker.launch(null)
-            },
-        style = MaterialTheme.typography.bodyLarge,
-        fontWeight = FontWeight.Normal,
-    )
-    OutlinedTextField(
-        viewModel.state.values.destFileNameTemplate,
-        {
-            viewModel.updateForm(context, viewModel.state.values.copy(destFileNameTemplate = it))
-        },
-        Modifier.fillMaxWidth(),
-        label = {
-            Text(stringResource(R.string.file_name_template))
-        },
-        placeholder = { Text(stringResource(R.string.template_placeholder)) },
-        supportingText = {
-            if (viewModel.state.values.predictedDestFileNames?.isNotEmpty() ?: false)
-                Text(
-                    stringResource(
-                        R.string.template_will_yield,
-                        viewModel.state.values.predictedDestFileNames!!
-                            .joinToString(stringResource(R.string.or), limit = 3),
-                    ),
-                )
-        },
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-        ),
-        singleLine = true,
-    )
-    Row(
-        Modifier.toggleable(viewModel.state.values.overwriteExisting) {
-            viewModel.updateForm(context, viewModel.state.values.copy(overwriteExisting = it))
-        },
-        Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
-        Alignment.Top,
-    ) {
-        Checkbox(viewModel.state.values.overwriteExisting, null)
-        Text(
-            stringResource(R.string.overwrite_existing),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Normal,
-        )
+
+        is Action.DELETE_STALE -> {
+            OutlinedTextField(
+                viewModel.state.values.retentionDays.toString(),
+                {
+                    it.toIntOrNull()?.let { days ->
+                        viewModel.updateForm(
+                            context,
+                            viewModel.state.values.copy(retentionDays = days),
+                        )
+                    }
+                },
+                Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.retention_days)) },
+                suffix = { Text(stringResource(R.string.days)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                ),
+            )
+        }
     }
     Text(
         AnnotatedString.fromHtml(
