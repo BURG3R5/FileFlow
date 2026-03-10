@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -19,11 +19,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import co.adityarajput.fileflow.R
+import co.adityarajput.fileflow.utils.findRulesToBeMigrated
 import co.adityarajput.fileflow.utils.getToggleString
 import co.adityarajput.fileflow.viewmodels.DialogState
 import co.adityarajput.fileflow.viewmodels.Provider
 import co.adityarajput.fileflow.viewmodels.RulesViewModel
 import co.adityarajput.fileflow.views.components.AppBar
+import co.adityarajput.fileflow.views.components.ImproperRulesetDialog
 import co.adityarajput.fileflow.views.components.ManageRuleDialog
 import co.adityarajput.fileflow.views.components.Tile
 import kotlinx.serialization.json.Json
@@ -35,7 +37,11 @@ fun RulesScreen(
     goToSettingsScreen: () -> Unit,
     viewModel: RulesViewModel = viewModel(factory = Provider.Factory),
 ) {
+    val context = LocalContext.current
     val state = viewModel.state.collectAsState()
+    val rulesToBeMigrated =
+        remember(state.value.rules) { context.findRulesToBeMigrated(state.value.rules.orEmpty()) }
+    var hideMissingPermissionsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -147,5 +153,10 @@ fun RulesScreen(
         }
         if (viewModel.selectedRule != null && viewModel.dialogState != null)
             ManageRuleDialog(viewModel)
+        if (rulesToBeMigrated.isNotEmpty() && !hideMissingPermissionsDialog)
+            ImproperRulesetDialog(
+                rulesToBeMigrated,
+                goToUpsertRuleScreen,
+            ) { hideMissingPermissionsDialog = true }
     }
 }

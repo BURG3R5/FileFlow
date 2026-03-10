@@ -30,8 +30,7 @@ fun FolderPickerBottomSheet(viewModel: UpsertRuleViewModel) {
     val hideSheet = { viewModel.folderPickerState = null }
     var currentDir by remember { mutableStateOf(Environment.getExternalStorageDirectory()) }
     val items = remember(currentDir) {
-        currentDir.listFiles()?.sortedBy { it.name.lowercase() }?.sortedBy { it.isFile }
-            ?: emptyList()
+        currentDir.listFiles()?.sortedBy { it.name.lowercase() }?.sortedBy { it.isFile }.orEmpty()
     }
 
     ModalBottomSheet(

@@ -33,6 +33,8 @@ class UpsertRuleViewModel(
         val superlative: FileSuperlative = FileSuperlative.LATEST,
         val keepOriginal: Boolean = true,
         val overwriteExisting: Boolean = false,
+        val scanSubdirectories: Boolean = false,
+        val preserveStructure: Boolean = false,
         val currentSrcFileNames: List<String>? = null,
         val predictedDestFileNames: List<String>? = null,
         val retentionDays: Int = 30,
@@ -45,12 +47,15 @@ class UpsertRuleViewModel(
                         rule.action.srcFileNamePattern, rule.action.dest,
                         rule.action.destFileNameTemplate, rule.action.superlative,
                         rule.action.keepOriginal, rule.action.overwriteExisting,
+                        rule.action.scanSubdirectories, rule.action.preserveStructure,
                     )
 
                 is Action.DELETE_STALE ->
                     Values(
                         rule.id, rule.action.base, rule.action.src,
-                        rule.action.srcFileNamePattern, retentionDays = rule.action.retentionDays,
+                        rule.action.srcFileNamePattern,
+                        scanSubdirectories = rule.action.scanSubdirectories,
+                        retentionDays = rule.action.retentionDays,
                     )
             }
         }
@@ -59,14 +64,18 @@ class UpsertRuleViewModel(
             is Action.MOVE ->
                 Rule(
                     Action.MOVE(
-                        src, srcFileNamePattern, dest, destFileNameTemplate, keepOriginal,
-                        overwriteExisting, superlative,
+                        src, srcFileNamePattern, dest, destFileNameTemplate,
+                        scanSubdirectories, keepOriginal, overwriteExisting, superlative,
+                        preserveStructure,
                     ),
                     id = ruleId,
                 )
 
             is Action.DELETE_STALE ->
-                Rule(Action.DELETE_STALE(src, srcFileNamePattern, retentionDays), id = ruleId)
+                Rule(
+                    Action.DELETE_STALE(src, srcFileNamePattern, retentionDays, scanSubdirectories),
+                    id = ruleId,
+                )
         }
     }
 
@@ -78,32 +87,41 @@ class UpsertRuleViewModel(
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
 
     fun updateForm(context: Context, values: Values) {
-        var currentSrcFileNames: List<String>? = null
+        var currentSrcFiles: List<File>? = null
         try {
             if (values.src.isNotBlank())
-                currentSrcFileNames = File.fromPath(context, values.src)!!.listFiles()
-                    .filter { it.isFile && it.name != null }.map { it.name!! }
+                currentSrcFiles = File.fromPath(context, values.src)!!
+                    .listChildren(values.scanSubdirectories)
+                    .filter { it.isFile && it.name != null }
         } catch (e: Exception) {
             Logger.e("UpsertRuleViewModel", "Couldn't fetch files in ${values.src}", e)
         }
 
         var predictedDestFileNames: List<String>? = null
         var warning: FormWarning? = null
-        if (currentSrcFileNames != null && values.destFileNameTemplate.isNotBlank()) {
-            try {
-                val regex = Regex(values.srcFileNamePattern)
+        try {
+            val regex = Regex(values.srcFileNamePattern)
 
-                predictedDestFileNames = currentSrcFileNames
-                    .filter { regex.matches(it) }
-                    .also { if (it.isEmpty()) warning = FormWarning.NO_MATCHES_IN_SRC }
-                    .map { regex.replace(it, values.destFileNameTemplate) }
-                    .distinct()
-            } catch (_: Exception) {
+            val matchingSrcFiles = currentSrcFiles
+                ?.filter { regex.matches(it.name!!) }
+                ?.also { if (it.isEmpty()) warning = FormWarning.NO_MATCHES_IN_SRC }
+
+            if (matchingSrcFiles != null && values.destFileNameTemplate.isNotBlank()) {
+                predictedDestFileNames = matchingSrcFiles.map {
+                    it.name!!.replace(
+                        regex,
+                        values.destFileNameTemplate.replace(
+                            $$"${folder}",
+                            it.parent?.name ?: "",
+                        ),
+                    )
+                }.distinct()
             }
+        } catch (_: Exception) {
         }
 
         val values = values.copy(
-            currentSrcFileNames = currentSrcFileNames,
+            currentSrcFileNames = currentSrcFiles.orEmpty().mapNotNull { it.name }.distinct(),
             predictedDestFileNames = predictedDestFileNames,
         )
         state = State(values, getError(values), warning)

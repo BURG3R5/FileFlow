@@ -3,6 +3,7 @@ package co.adityarajput.fileflow.utils
 import android.content.Context
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import co.adityarajput.fileflow.data.models.Rule
 import java.net.URLDecoder
 import java.io.File as IOFile
 
@@ -37,10 +38,28 @@ sealed class File {
             is FSFile -> ioFile.name
         }
 
+    val path: String
+        get() = when (this) {
+            is SAFFile -> documentFile.uri.toString()
+            is FSFile -> ioFile.absolutePath
+        }
+
+    val parent
+        get() = when (this) {
+            is SAFFile -> documentFile.parentFile?.let { SAFFile(it) }
+            is FSFile -> ioFile.parentFile?.let { FSFile(it) }
+        }
+
     val isFile
         get() = when (this) {
             is SAFFile -> documentFile.isFile
             is FSFile -> ioFile.isFile
+        }
+
+    val isDirectory
+        get() = when (this) {
+            is SAFFile -> documentFile.isDirectory
+            is FSFile -> ioFile.isDirectory
         }
 
     val type
@@ -59,9 +78,25 @@ sealed class File {
         is FSFile -> ioFile.length()
     }
 
-    fun listFiles() = when (this) {
-        is SAFFile -> documentFile.listFiles().map { SAFFile(it) }
-        is FSFile -> ioFile.listFiles()?.map { FSFile(it) } ?: emptyList()
+    fun pathRelativeTo(basePath: String) = path.getGetDirectoryFromUri()
+        .substringAfter(basePath.getGetDirectoryFromUri(), "").ifBlank { null }
+
+    fun listChildren(recurse: Boolean): List<File> {
+        if (!isDirectory) return emptyList()
+
+        if (!recurse) {
+            return when (this) {
+                is SAFFile -> documentFile.listFiles().map { SAFFile(it) }
+                is FSFile -> ioFile.listFiles()?.map { FSFile(it) }.orEmpty()
+            }
+        }
+
+        val files = mutableListOf<File>()
+        listChildren(false).forEach {
+            files.add(it)
+            files.addAll(it.listChildren(true))
+        }
+        return files
     }
 
     fun isIdenticalTo(other: File, context: Context): Boolean {
@@ -92,6 +127,33 @@ sealed class File {
 
             is FSFile -> IOFile(ioFile, name)
                 .let { if (it.createNewFile()) FSFile(it) else null }
+        }
+    }
+
+    fun createDirectory(relativePath: String): File? {
+        return when (this) {
+            is SAFFile -> {
+                val parts = relativePath.split('/').filter { it.isNotBlank() }
+                var currentDir: DocumentFile = documentFile
+
+                for (part in parts) {
+                    val nextDir = currentDir.findFile(part)
+                        ?: currentDir.createDirectory(part)
+
+                    if (nextDir == null) {
+                        Logger.e("Files", "Failed to create directory: $part")
+                        return null
+                    }
+
+                    currentDir = nextDir
+                }
+
+                SAFFile(currentDir)
+            }
+
+            is FSFile -> IOFile(ioFile.path + '/' + relativePath).let {
+                if (it.exists() || it.mkdirs()) FSFile(it) else null
+            }
         }
     }
 
@@ -140,3 +202,6 @@ fun String.getGetDirectoryFromUri() =
 
         substringAfter(file.name ?: "").ifBlank { "/" }
     }
+
+fun Context.findRulesToBeMigrated(rules: List<Rule>) =
+    rules.filter { File.fromPath(this, it.action.src) == null }

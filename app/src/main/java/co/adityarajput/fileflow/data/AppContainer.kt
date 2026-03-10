@@ -48,6 +48,7 @@ class AppContainer(private val context: Context) {
                         Action.DELETE_STALE(
                             "/storage/emulated/0/Download",
                             "Alarmetrics_v[\\d\\.]+.apk",
+                            scanSubdirectories = true,
                         ),
                         enabled = false,
                     ),

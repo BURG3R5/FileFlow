@@ -17,6 +17,7 @@ import kotlinx.serialization.Serializable
 sealed class Action {
     abstract val src: String
     abstract val srcFileNamePattern: String
+    abstract val scanSubdirectories: Boolean
 
     abstract val verb: Int
     abstract val phrase: Int
@@ -38,9 +39,11 @@ sealed class Action {
         override val srcFileNamePattern: String,
         val dest: String,
         val destFileNameTemplate: String,
+        override val scanSubdirectories: Boolean = false,
         val keepOriginal: Boolean = true,
         val overwriteExisting: Boolean = false,
         val superlative: FileSuperlative = FileSuperlative.LATEST,
+        val preserveStructure: Boolean = scanSubdirectories,
     ) : Action() {
         override val verb get() = if (keepOriginal) R.string.copy else R.string.move
 
@@ -52,8 +55,12 @@ sealed class Action {
 
             withStyle(dullStyle) { append("from ") }
             append(src.getGetDirectoryFromUri())
+            if (scanSubdirectories)
+                withStyle(dullStyle) { append(" & subfolders") }
             withStyle(dullStyle) { append("\nto ") }
             append(dest.getGetDirectoryFromUri())
+            if (preserveStructure)
+                withStyle(dullStyle) { append(" & subfolders") }
             withStyle(dullStyle) { append("\nas ") }
             append(destFileNameTemplate)
         }
@@ -64,6 +71,7 @@ sealed class Action {
         override val src: String,
         override val srcFileNamePattern: String,
         val retentionDays: Int = 30,
+        override val scanSubdirectories: Boolean = false,
     ) : Action() {
         override val verb get() = R.string.delete_stale
 
@@ -77,6 +85,8 @@ sealed class Action {
 
             withStyle(dullStyle) { append("in ") }
             append(src.getGetDirectoryFromUri())
+            if (scanSubdirectories)
+                withStyle(dullStyle) { append(" & subfolders") }
             withStyle(dullStyle) { append("\nif unmodified for ") }
             append((retentionTimeInMillis()).toShortHumanReadableTime())
         }
