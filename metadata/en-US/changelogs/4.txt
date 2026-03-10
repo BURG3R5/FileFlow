@@ -2,8 +2,12 @@
 • feat: Add "DELETE_STALE" action
 • feat: Let rules scan subfolders and recreate them
 
+IMPORTANT: The database schema has changed significantly. Rules created on v1 will not be supported on v2.
+
 Rules can now target protected folders (like "Download") if special "all files" access is granted.
 
-The new "DELETE_STALE" action helps get rid of unused/untouched files. Note: "Staleness" is calculated based on when the file was last modified, not when it was last accessed.
+The new "DELETE_STALE" action helps get rid of unused/untouched files.
+
+NOTE: "Staleness" is calculated based on when the file was last modified, not when it was last accessed.
 
 Finally, rules can now recursively scan (and re-create) subfolders.
