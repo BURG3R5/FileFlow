@@ -55,6 +55,13 @@
     <string name="disable">Disable</string>
     <string name="delete">Delete</string>
     <!-- endregion -->
+    <!-- region ImproperRulesetDialog -->
+    <string name="improper_ruleset">Incompatible rules</string>
+    <string name="explain_saf_to_io_migration">The following rules must be migrated to broader access.</string>
+    <string name="explain_missing_saf_access">The following rules cannot be executed with current permissions.</string>
+    <string name="please_reselect_folders">Please tap on each tile and reselect folders.</string>
+    <string name="dismiss">Dismiss</string>
+    <!-- endregion -->
     <!-- region Action -->
     <string name="copy">COPY</string>
     <string name="move">MOVE</string>

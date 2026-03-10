@@ -3,6 +3,7 @@ package co.adityarajput.fileflow.utils
 import android.content.Context
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import co.adityarajput.fileflow.data.models.Rule
 import java.net.URLDecoder
 import java.io.File as IOFile
 
@@ -201,3 +202,6 @@ fun String.getGetDirectoryFromUri() =
 
         substringAfter(file.name ?: "").ifBlank { "/" }
     }
+
+fun Context.findRulesToBeMigrated(rules: List<Rule>) =
+    rules.filter { File.fromPath(this, it.action.src) == null }
