@@ -8,7 +8,7 @@
     <string name="app_logo">App logo</string>
     <string name="app_description">" scans your files periodically and organizes them according to your rules."</string>
     <string name="app_links"><![CDATA[Licensed under <a href=\"https://github.com/BURG3R5/FileFlow/blob/master/LICENSE\">GPLv3</a><br/>Source code available on <a href=\"https://github.com/BURG3R5/FileFlow\">GitHub</a><br/>Visit the <a href=\"https://github.com/BURG3R5/FileFlow/wiki\">project wiki</a> for more]]></string>
-    <string name="app_permissions"><![CDATA[Permissions<small><ul><li>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: to request exemption from background usage restrictions</li><li>WRITE/MANAGE_EXTERNAL_STORAGE: for targeting subfolders or protected locations</li></ul>Other permissions may be used by libraries to manage tasks, such as executing flows periodically.</small>]]></string>
+    <string name="app_permissions"><![CDATA[Permissions<small><ul><li>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: to request exemption from background usage restrictions</li><li>WRITE/MANAGE_EXTERNAL_STORAGE: for targeting protected locations</li></ul>Other permissions may be used by libraries to manage tasks, such as executing flows periodically.</small>]]></string>
     <string name="dev_credit"><![CDATA[Developed by <a href=\"https://github.com/BURG3R5/\">BURG3R5</a>]]></string>
     <!-- region AppBar -->
     <string name="back_button">Back button</string>
@@ -33,7 +33,7 @@
     <string name="onboarding_info_1">"FileFlow scans your files periodically and organizes them according to your rules.\n\nOn some devices, the 'battery optimization' feature leads to delayed execution."</string>
     <string name="disable_optimization">Disable optimization</string>
     <string name="skip">Skip</string>
-    <string name="onboarding_info_2">"To use advanced features such as targeting subfolders or protected locations, FileFlow will need all files access.\n\nNo data is sent off-device; FileFlow doesn't have access to the internet."</string>
+    <string name="onboarding_info_2">"To use advanced features such as targeting protected locations, FileFlow will need all files access.\n\nNo data is sent off-device; FileFlow doesn't have access to the internet."</string>
     <string name="grant_permission">Grant permission</string>
     <!-- endregion -->
 
@@ -68,7 +68,7 @@
     <string name="disable_battery_optimization">Disable optimization</string>
     <string name="explain_disabling_battery_optimization">Exempts the app from being restricted by the OS</string>
     <string name="all_files_access">All files access</string>
-    <string name="explain_all_files_access">Lets flows target subfolders or protected locations</string>
+    <string name="explain_all_files_access">Lets flows target protected locations</string>
     <string name="settings_section_2">App Appearance</string>
     <string name="app_theme">App Theme</string>
     <string name="light">Light</string>
@@ -89,6 +89,7 @@
     <string name="action">Action:</string>
     <string name="source">"Source: "</string>
     <string name="select_folder">select folder</string>
+    <string name="scan_subdirectories">Scan subfolders</string>
     <string name="file_name_pattern">File name pattern</string>
     <string name="pattern_placeholder">Enter a regex pattern</string>
     <string name="match_entire_filename">Pattern should match the entire filename</string>
@@ -98,6 +99,7 @@
     <string name="choose_superlative">"In case of multiple matches, choose: "</string>
     <string name="arrow_down">An arrow pointing downward</string>
     <string name="destination">"Destination: "</string>
+    <string name="preserve_structure">Recreate source folder-structure in destination</string>
     <string name="file_name_template">File name template</string>
     <string name="template_placeholder">Enter a regex template</string>
     <string name="template_will_yield">Template will yield %1$s</string>
@@ -107,7 +109,7 @@
     <string name="pattern_advice"><![CDATA[Click <a href=\"https://github.com/BURG3R5/FileFlow/wiki/Examples\">here↗</a> for example patterns and templates.]]></string>
     <string name="invalid_regex">Regex pattern contains errors</string>
     <string name="invalid_template">Regex template contains errors</string>
-    <string name="pattern_doesnt_match_src_files">Regex pattern doesn\'t match any file in the source folder</string>
+    <string name="pattern_doesnt_match_src_files">"Regex pattern doesn't match any file in the source folder"</string>
     <!-- region Action -->
     <string name="move_phrase">Copy or move to another folder</string>
     <string name="delete_stale_phrase">Delete if unmodified for a while</string>

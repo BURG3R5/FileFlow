@@ -185,18 +185,30 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.Normal,
     )
+    Row(
+        Modifier.toggleable(viewModel.state.values.scanSubdirectories) {
+            viewModel.updateForm(context, viewModel.state.values.copy(scanSubdirectories = it))
+        },
+        Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+        Alignment.CenterVertically,
+    ) {
+        Checkbox(viewModel.state.values.scanSubdirectories, null)
+        Text(
+            stringResource(R.string.scan_subdirectories),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Normal,
+        )
+    }
     OutlinedTextField(
         viewModel.state.values.srcFileNamePattern,
         {
             viewModel.updateForm(context, viewModel.state.values.copy(srcFileNamePattern = it))
         },
         Modifier.fillMaxWidth(),
-        label = {
-            Text(stringResource(R.string.file_name_pattern))
-        },
+        label = { Text(stringResource(R.string.file_name_pattern)) },
         placeholder = { Text(stringResource(R.string.pattern_placeholder)) },
         supportingText = {
-            if (viewModel.state.values.currentSrcFileNames?.isEmpty() ?: true)
+            if (viewModel.state.values.currentSrcFileNames.isNullOrEmpty())
                 Text(stringResource(R.string.match_entire_filename))
             else
                 Text(
@@ -221,7 +233,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                     viewModel.updateForm(context, viewModel.state.values.copy(keepOriginal = !it))
                 },
                 Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
-                Alignment.Top,
+                Alignment.CenterVertically,
             ) {
                 Checkbox(!viewModel.state.values.keepOriginal, null)
                 Text(
@@ -282,6 +294,24 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Normal,
             )
+            if (viewModel.state.values.scanSubdirectories)
+                Row(
+                    Modifier.toggleable(viewModel.state.values.preserveStructure) {
+                        viewModel.updateForm(
+                            context,
+                            viewModel.state.values.copy(preserveStructure = it),
+                        )
+                    },
+                    Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                    Alignment.CenterVertically,
+                ) {
+                    Checkbox(viewModel.state.values.preserveStructure, null)
+                    Text(
+                        stringResource(R.string.preserve_structure),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Normal,
+                    )
+                }
             OutlinedTextField(
                 viewModel.state.values.destFileNameTemplate,
                 {
@@ -291,9 +321,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                     )
                 },
                 Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.file_name_template))
-                },
+                label = { Text(stringResource(R.string.file_name_template)) },
                 placeholder = { Text(stringResource(R.string.template_placeholder)) },
                 supportingText = {
                     if (viewModel.state.values.predictedDestFileNames?.isNotEmpty() ?: false)
@@ -320,7 +348,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                     )
                 },
                 Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
-                Alignment.Top,
+                Alignment.CenterVertically,
             ) {
                 Checkbox(viewModel.state.values.overwriteExisting, null)
                 Text(

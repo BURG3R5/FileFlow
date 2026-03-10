@@ -28,7 +28,8 @@ class FlowExecutor(private val context: Context) {
                         continue
                     }
 
-                    val srcFiles = File.fromPath(context, rule.action.src)?.listFiles()
+                    val srcFiles = File.fromPath(context, rule.action.src)
+                        ?.listChildren(rule.action.scanSubdirectories)
                         ?.filter { it.isFile && it.name != null && regex.matches(it.name!!) }
                         ?.let {
                             if (rule.action.superlative != FileSuperlative.NONE)
@@ -38,13 +39,28 @@ class FlowExecutor(private val context: Context) {
                         } ?: continue
 
                     for (srcFile in srcFiles) {
-                        val destFileName = regex.replace(
-                            srcFile.name!!,
-                            rule.action.destFileNameTemplate,
-                        )
-                        var destFile = destDir.listFiles().firstOrNull {
-                            it.isFile && it.name == destFileName
+                        val relativePath = srcFile.parent!!.pathRelativeTo(rule.action.src)
+                        val destSubDir =
+                            if (!rule.action.preserveStructure || relativePath == null) destDir
+                            else destDir.createDirectory(relativePath)
+
+                        if (destSubDir == null) {
+                            Logger.e(
+                                "FlowExecutor",
+                                "Failed to create subdirectory in ${destDir.path}",
+                            )
+                            continue
                         }
+
+                        val destFileName = srcFile.name!!.replace(
+                            regex,
+                            rule.action.destFileNameTemplate.replace(
+                                $$"${folder}",
+                                srcFile.parent?.name ?: "",
+                            ),
+                        )
+                        var destFile = destSubDir.listChildren(false)
+                            .firstOrNull { it.isFile && it.name == destFileName }
 
                         if (destFile != null) {
                             if (!rule.action.overwriteExisting) {
@@ -65,7 +81,7 @@ class FlowExecutor(private val context: Context) {
                             destFile.delete()
                         }
 
-                        destFile = destDir.createFile(srcFile.type, destFileName)
+                        destFile = destSubDir.createFile(srcFile.type, destFileName)
 
                         if (destFile == null) {
                             Logger.e("FlowExecutor", "Failed to create $destFileName")
@@ -95,7 +111,8 @@ class FlowExecutor(private val context: Context) {
                 }
 
                 is Action.DELETE_STALE -> {
-                    val srcFiles = File.fromPath(context, rule.action.src)?.listFiles()
+                    val srcFiles = File.fromPath(context, rule.action.src)
+                        ?.listChildren(rule.action.scanSubdirectories)
                         ?.filter { it.isFile && it.name != null && regex.matches(it.name!!) }
                         ?.filter {
                             System.currentTimeMillis() - it.lastModified() >=
@@ -106,17 +123,18 @@ class FlowExecutor(private val context: Context) {
                         ?: continue
 
                     for (srcFile in srcFiles) {
-                        Logger.i("FlowExecutor", "Deleting ${srcFile.name}")
+                        val srcFileName = srcFile.name ?: continue
+                        Logger.i("FlowExecutor", "Deleting $srcFileName")
 
                         val result = srcFile.delete()
                         if (!result) {
-                            Logger.e("FlowExecutor", "Failed to delete ${srcFile.name}")
+                            Logger.e("FlowExecutor", "Failed to delete $srcFileName")
                             continue
                         }
 
                         repository.registerExecution(
                             rule,
-                            Execution(srcFile.name!!, rule.action.verb),
+                            Execution(srcFileName, rule.action.verb),
                         )
                     }
                 }
