@@ -49,7 +49,9 @@ fun FolderPickerBottomSheet(viewModel: UpsertRuleViewModel) {
         )
         HorizontalDivider()
         LazyColumn(
-            Modifier.padding(dimensionResource(R.dimen.padding_medium)),
+            Modifier
+                .weight(1f)
+                .padding(dimensionResource(R.dimen.padding_medium)),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium)),
         ) {
             if (currentDir.parentFile?.canRead() ?: false) {
