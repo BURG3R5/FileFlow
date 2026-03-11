@@ -93,7 +93,7 @@ fun RulesScreen(
                 items(state.value.rules!!, { it.id }) {
                     Tile(
                         it.action.srcFileNamePattern,
-                        stringResource(it.action.verb),
+                        stringResource(it.action.verb.resource),
                         if (!it.enabled) stringResource(R.string.disabled)
                         else pluralStringResource(
                             R.plurals.execution,

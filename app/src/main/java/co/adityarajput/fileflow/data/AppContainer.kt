@@ -1,7 +1,6 @@
 package co.adityarajput.fileflow.data
 
 import android.content.Context
-import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.Execution
 import co.adityarajput.fileflow.data.models.Rule
@@ -56,27 +55,27 @@ class AppContainer(private val context: Context) {
                 repository.upsert(
                     Execution(
                         "TubularData-20251201_113745.zip",
-                        R.string.move,
+                        Verb.MOVE,
                         System.currentTimeMillis() - 86400000L * 66,
                     ),
                     Execution(
                         "TubularData-20260101_141634.zip",
-                        R.string.move,
+                        Verb.MOVE,
                         System.currentTimeMillis() - 86400000L * 35,
                     ),
                     Execution(
                         "TubularData-20260201_160604.zip",
-                        R.string.move,
+                        Verb.MOVE,
                         System.currentTimeMillis() - 86400000L * 4,
                     ),
                     Execution(
                         "AntennaPodBackup-2026-02-02.db",
-                        R.string.copy,
+                        Verb.COPY,
                         System.currentTimeMillis() - 86400000L * 3,
                     ),
                     Execution(
                         "AntennaPodBackup-2026-02-05.db",
-                        R.string.copy,
+                        Verb.COPY,
                         System.currentTimeMillis() - 60_000L * 5,
                     ),
                 )

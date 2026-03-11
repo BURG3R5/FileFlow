@@ -2,14 +2,25 @@ package co.adityarajput.fileflow.data
 
 import android.content.Context
 import androidx.room.*
+import androidx.room.migration.AutoMigrationSpec
 import co.adityarajput.fileflow.data.models.Execution
 import co.adityarajput.fileflow.data.models.Rule
 
-@Database([Rule::class, Execution::class], version = 2, autoMigrations = [AutoMigration(1, 2)])
+@Database(
+    [Rule::class, Execution::class],
+    version = 3,
+    autoMigrations = [
+        AutoMigration(1, 2),
+        AutoMigration(2, 3, FileFlowDatabase.DeleteEColumnAV::class),
+    ],
+)
 @TypeConverters(Converters::class)
 abstract class FileFlowDatabase : RoomDatabase() {
     abstract fun ruleDao(): RuleDao
     abstract fun executionDao(): ExecutionDao
+
+    @DeleteColumn("executions", "actionVerb")
+    class DeleteEColumnAV : AutoMigrationSpec
 
     companion object {
         @Volatile
