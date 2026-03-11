@@ -7,6 +7,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import co.adityarajput.fileflow.R
+import co.adityarajput.fileflow.data.Verb
 import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.getGetDirectoryFromUri
 import co.adityarajput.fileflow.utils.toShortHumanReadableTime
@@ -19,7 +20,7 @@ sealed class Action {
     abstract val srcFileNamePattern: String
     abstract val scanSubdirectories: Boolean
 
-    abstract val verb: Int
+    abstract val verb: Verb
     abstract val phrase: Int
 
     @Composable
@@ -45,7 +46,7 @@ sealed class Action {
         val superlative: FileSuperlative = FileSuperlative.LATEST,
         val preserveStructure: Boolean = scanSubdirectories,
     ) : Action() {
-        override val verb get() = if (keepOriginal) R.string.copy else R.string.move
+        override val verb get() = if (keepOriginal) Verb.COPY else Verb.MOVE
 
         override val phrase = R.string.move_phrase
 
@@ -73,7 +74,7 @@ sealed class Action {
         val retentionDays: Int = 30,
         override val scanSubdirectories: Boolean = false,
     ) : Action() {
-        override val verb get() = R.string.delete_stale
+        override val verb get() = Verb.DELETE_STALE
 
         override val phrase = R.string.delete_stale_phrase
 

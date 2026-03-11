@@ -4,6 +4,8 @@
 
 Rules can now target protected folders (like "Download") if special "all files" access is granted.
 
-The new "DELETE_STALE" action helps get rid of unused/untouched files. Note: "Staleness" is calculated based on when the file was last modified, not when it was last accessed.
+The new "DELETE_STALE" action helps get rid of unused/untouched files.
+
+IMPORTANT: "Staleness" is calculated based on when the file was last modified, not when it was last accessed.
 
 Finally, rules can now recursively scan (and re-create) subfolders.

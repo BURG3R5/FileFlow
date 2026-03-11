@@ -51,7 +51,7 @@ fun ImproperRulesetDialog(
                     rulesToBeMigrated.forEach {
                         Tile(
                             it.action.srcFileNamePattern,
-                            stringResource(it.action.verb),
+                            stringResource(it.action.verb.resource),
                             if (!it.enabled) stringResource(R.string.disabled)
                             else pluralStringResource(
                                 R.plurals.execution,
