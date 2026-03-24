@@ -52,13 +52,7 @@ class FlowExecutor(private val context: Context) {
                             continue
                         }
 
-                        val destFileName = srcFile.name!!.replace(
-                            regex,
-                            rule.action.destFileNameTemplate.replace(
-                                $$"${folder}",
-                                srcFile.parent?.name ?: "",
-                            ),
-                        )
+                        val destFileName = rule.action.getDestFileName(srcFile)
                         var destFile = destSubDir.listChildren(false)
                             .firstOrNull { it.isFile && it.name == destFileName }
 

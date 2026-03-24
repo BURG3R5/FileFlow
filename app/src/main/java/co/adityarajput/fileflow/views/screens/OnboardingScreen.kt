@@ -1,6 +1,5 @@
 package co.adityarajput.fileflow.views.screens
 
-import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.layout.*
@@ -22,7 +21,6 @@ private val permissions = listOf(
     Permission.MANAGE_EXTERNAL_STORAGE,
 )
 
-@SuppressLint("BatteryLife")
 @Composable
 fun OnboardingScreen(goToRulesScreen: () -> Unit = {}) {
     val context = LocalContext.current

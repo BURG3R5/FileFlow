@@ -12,6 +12,7 @@ import co.adityarajput.fileflow.utils.File
 import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.Logger
 import co.adityarajput.fileflow.views.components.FolderPickerState
+import kotlin.uuid.ExperimentalUuidApi
 
 class UpsertRuleViewModel(
     rule: Rule?,
@@ -86,6 +87,7 @@ class UpsertRuleViewModel(
 
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
 
+    @OptIn(ExperimentalUuidApi::class)
     fun updateForm(context: Context, values: Values) {
         var currentSrcFiles: List<File>? = null
         try {
@@ -107,15 +109,9 @@ class UpsertRuleViewModel(
                 ?.also { if (it.isEmpty()) warning = FormWarning.NO_MATCHES_IN_SRC }
 
             if (matchingSrcFiles != null && values.destFileNameTemplate.isNotBlank()) {
-                predictedDestFileNames = matchingSrcFiles.map {
-                    it.name!!.replace(
-                        regex,
-                        values.destFileNameTemplate.replace(
-                            $$"${folder}",
-                            it.parent?.name ?: "",
-                        ),
-                    )
-                }.distinct()
+                predictedDestFileNames = matchingSrcFiles
+                    .map { (values.toRule().action as Action.MOVE).getDestFileName(it) }
+                    .distinct()
             }
         } catch (_: Exception) {
         }

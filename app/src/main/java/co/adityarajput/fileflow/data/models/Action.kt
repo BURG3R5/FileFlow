@@ -8,10 +8,13 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.data.Verb
+import co.adityarajput.fileflow.utils.File
 import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.getGetDirectoryFromUri
 import co.adityarajput.fileflow.utils.toShortHumanReadableTime
 import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Suppress("ClassName")
 @Serializable
@@ -65,6 +68,19 @@ sealed class Action {
             withStyle(dullStyle) { append("\nas ") }
             append(destFileNameTemplate)
         }
+
+        @OptIn(ExperimentalUuidApi::class)
+        fun getDestFileName(srcFile: File) =
+            srcFile.name!!.replace(
+                Regex(srcFileNamePattern),
+                destFileNameTemplate.replace(
+                    $$"${uuid}",
+                    Uuid.random().toString(),
+                ).replace(
+                    $$"${folder}",
+                    srcFile.parent?.name ?: "",
+                ),
+            )
     }
 
     @Serializable
