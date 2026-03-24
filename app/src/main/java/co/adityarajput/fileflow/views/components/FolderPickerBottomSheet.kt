@@ -1,6 +1,5 @@
 package co.adityarajput.fileflow.views.components
 
-import android.os.Environment
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -21,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import co.adityarajput.fileflow.R
+import co.adityarajput.fileflow.utils.getAllStorages
 import co.adityarajput.fileflow.viewmodels.UpsertRuleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,7 +28,11 @@ import co.adityarajput.fileflow.viewmodels.UpsertRuleViewModel
 fun FolderPickerBottomSheet(viewModel: UpsertRuleViewModel) {
     val context = LocalContext.current
     val hideSheet = { viewModel.folderPickerState = null }
-    var currentDir by remember { mutableStateOf(Environment.getExternalStorageDirectory()) }
+
+    val storages = remember { context.getAllStorages() }
+    var currentStorage by remember { mutableIntStateOf(0) }
+
+    var currentDir by remember { mutableStateOf(storages[0]) }
     val items = remember(currentDir) {
         currentDir.listFiles()?.sortedBy { it.name.lowercase() }?.sortedBy { it.isFile }.orEmpty()
     }
@@ -54,12 +58,31 @@ fun FolderPickerBottomSheet(viewModel: UpsertRuleViewModel) {
                 .padding(dimensionResource(R.dimen.padding_medium)),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium)),
         ) {
+            if (currentDir in storages) {
+                item {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                currentStorage = (currentStorage + 1) % storages.size
+                                currentDir = storages[currentStorage]
+                            },
+                        Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.folder_switch),
+                            stringResource(R.string.storage_switch),
+                        )
+                        Text(stringResource(R.string.storage_switch))
+                    }
+                }
+            }
             if (currentDir.parentFile?.canRead() ?: false) {
                 item {
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .clickable { currentDir = currentDir.parentFile },
+                            .clickable { currentDir = currentDir.parentFile!! },
                         Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
                     ) {
                         Icon(

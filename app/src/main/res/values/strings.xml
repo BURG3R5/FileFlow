@@ -124,6 +124,7 @@
     <string name="delete_stale_phrase">Delete if unmodified for a while</string>
     <!-- endregion -->
     <!-- region FolderPickerBottomSheet -->
+    <string name="storage_switch">Switch storage</string>
     <string name="parent_directory">Back</string>
     <string name="empty_folder">(Empty)</string>
     <string name="folder">Folder</string>
