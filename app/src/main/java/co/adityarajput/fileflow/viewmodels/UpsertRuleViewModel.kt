@@ -107,15 +107,9 @@ class UpsertRuleViewModel(
                 ?.also { if (it.isEmpty()) warning = FormWarning.NO_MATCHES_IN_SRC }
 
             if (matchingSrcFiles != null && values.destFileNameTemplate.isNotBlank()) {
-                predictedDestFileNames = matchingSrcFiles.map {
-                    it.name!!.replace(
-                        regex,
-                        values.destFileNameTemplate.replace(
-                            $$"${folder}",
-                            it.parent?.name ?: "",
-                        ),
-                    )
-                }.distinct()
+                predictedDestFileNames = matchingSrcFiles
+                    .map { (values.toRule().action as Action.MOVE).getDestFileName(it) }
+                    .distinct()
             }
         } catch (_: Exception) {
         }
