@@ -12,7 +12,6 @@ import co.adityarajput.fileflow.utils.File
 import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.Logger
 import co.adityarajput.fileflow.views.components.FolderPickerState
-import kotlin.uuid.ExperimentalUuidApi
 
 class UpsertRuleViewModel(
     rule: Rule?,
@@ -87,7 +86,6 @@ class UpsertRuleViewModel(
 
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
 
-    @OptIn(ExperimentalUuidApi::class)
     fun updateForm(context: Context, values: Values) {
         var currentSrcFiles: List<File>? = null
         try {
