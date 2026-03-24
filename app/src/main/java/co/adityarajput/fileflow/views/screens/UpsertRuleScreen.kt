@@ -324,7 +324,31 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 label = { Text(stringResource(R.string.file_name_template)) },
                 placeholder = { Text(stringResource(R.string.template_placeholder)) },
                 supportingText = {
-                    if (viewModel.state.values.predictedDestFileNames?.isNotEmpty() ?: false)
+                    if (viewModel.state.values.predictedDestFileNames.isNullOrEmpty()) {
+                        Text(
+                            buildAnnotatedString {
+                                append(stringResource(R.string.blank_template_supporting))
+                                if (viewModel.state.values.destFileNameTemplate != "$0") {
+                                    withLink(
+                                        LinkAnnotation.Clickable(
+                                            "keep_name",
+                                            TextLinkStyles(
+                                                SpanStyle(
+                                                    MaterialTheme.colorScheme.primary,
+                                                    textDecoration = TextDecoration.Underline,
+                                                ),
+                                            ),
+                                        ) {
+                                            viewModel.updateForm(
+                                                context,
+                                                viewModel.state.values.copy(destFileNameTemplate = "$0"),
+                                            )
+                                        },
+                                    ) { append(stringResource(R.string.keep_name)) }
+                                }
+                            },
+                        )
+                    } else {
                         Text(
                             stringResource(
                                 R.string.template_will_yield,
@@ -332,6 +356,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                                     .joinToString(stringResource(R.string.or), limit = 3),
                             ),
                         )
+                    }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,

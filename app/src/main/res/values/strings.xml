@@ -109,6 +109,8 @@
     <string name="preserve_structure">Recreate source folder-structure in destination</string>
     <string name="file_name_template">File name template</string>
     <string name="template_placeholder">Enter a regex template</string>
+    <string name="blank_template_supporting">"Template will be used to name the file in the destination. "</string>
+    <string name="keep_name">Keep original name?</string>
     <string name="template_will_yield">Template will yield %1$s</string>
     <string name="overwrite_existing">Overwrite existing files in the destination, in case of conflict</string>
     <string name="retention_days">Mark stale if unmodified for</string>
