@@ -5,8 +5,12 @@ import co.adityarajput.fileflow.data.AppContainer
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.Execution
 import co.adityarajput.fileflow.data.models.Rule
-import co.adityarajput.fileflow.utils.*
+import co.adityarajput.fileflow.utils.File
+import co.adityarajput.fileflow.utils.FileSuperlative
+import co.adityarajput.fileflow.utils.Logger
+import co.adityarajput.fileflow.utils.isDebugBuild
 import kotlinx.coroutines.flow.first
+import java.nio.file.FileAlreadyExistsException
 
 class FlowExecutor(private val context: Context) {
     private val repository by lazy { AppContainer(context).repository }
@@ -22,7 +26,6 @@ class FlowExecutor(private val context: Context) {
             when (rule.action) {
                 is Action.MOVE -> {
                     val destDir = File.fromPath(context, rule.action.dest)
-
                     if (destDir == null) {
                         Logger.e("FlowExecutor", "${rule.action.dest} is invalid")
                         continue
@@ -32,18 +35,18 @@ class FlowExecutor(private val context: Context) {
                         ?.listChildren(rule.action.scanSubdirectories)
                         ?.filter { it.isFile && it.name != null && regex.matches(it.name!!) }
                         ?.let {
-                            if (rule.action.superlative != FileSuperlative.NONE)
+                            if (rule.action.superlative == FileSuperlative.NONE) it else
                                 listOf(it.maxByOrNull(rule.action.superlative.selector) ?: continue)
-                            else
-                                it
                         } ?: continue
 
                     for (srcFile in srcFiles) {
+                        val srcFileName = srcFile.name ?: continue
+                        val destFileName = rule.action.getDestFileName(srcFile)
+
                         val relativePath = srcFile.parent!!.pathRelativeTo(rule.action.src)
                         val destSubDir =
                             if (!rule.action.preserveStructure || relativePath == null) destDir
                             else destDir.createDirectory(relativePath)
-
                         if (destSubDir == null) {
                             Logger.e(
                                 "FlowExecutor",
@@ -52,55 +55,41 @@ class FlowExecutor(private val context: Context) {
                             continue
                         }
 
-                        val destFileName = rule.action.getDestFileName(srcFile)
-                        var destFile = destSubDir.listChildren(false)
-                            .firstOrNull { it.isFile && it.name == destFileName }
-
-                        if (destFile != null) {
-                            if (!rule.action.overwriteExisting) {
-                                Logger.e("FlowExecutor", "${destFile.name} already exists")
-                                continue
-                            }
-
-                            if (srcFile.isIdenticalTo(destFile, context)) {
-                                Logger.i(
-                                    "FlowExecutor",
-                                    "Source and destination files are identical",
-                                )
-                                continue
-                            }
-
-
-                            Logger.i("FlowExecutor", "Deleting existing ${destFile.name}")
-                            destFile.delete()
-                        }
-
-                        destFile = destSubDir.createFile(srcFile.type, destFileName)
-
-                        if (destFile == null) {
-                            Logger.e("FlowExecutor", "Failed to create $destFileName")
-                            continue
-                        }
-
-                        val result = context.copyFile(srcFile, destFile)
-                        if (!result) {
-                            Logger.e(
+                        if (
+                            destSubDir
+                                .listChildren(false)
+                                .firstOrNull { it.isFile && it.name == destFileName }
+                                ?.isIdenticalTo(srcFile, context)
+                            == true
+                        ) {
+                            Logger.i(
                                 "FlowExecutor",
-                                "Failed to copy ${srcFile.name} to ${destFile.name}",
+                                "Source and destination files are identical",
                             )
-                            destFile.delete()
                             continue
                         }
 
-                        repository.registerExecution(
-                            rule,
-                            Execution(srcFile.name!!, rule.action.verb),
-                        )
-
-                        if (!rule.action.keepOriginal) {
-                            Logger.i("FlowExecutor", "Deleting original ${srcFile.name}")
-                            srcFile.delete()
+                        try {
+                            Logger.i(
+                                "FlowExecutor",
+                                "Moving $srcFileName to ${destSubDir.path}/$destFileName",
+                            )
+                            srcFile.moveTo(
+                                destSubDir,
+                                destFileName,
+                                rule.action.keepOriginal,
+                                rule.action.overwriteExisting,
+                                context,
+                            )
+                        } catch (e: FileAlreadyExistsException) {
+                            Logger.e("FlowExecutor", "$destFileName already exists", e)
+                            continue
+                        } catch (e: Exception) {
+                            Logger.e("FlowExecutor", "Failed to move $srcFileName", e)
+                            continue
                         }
+
+                        repository.registerExecution(rule, Execution(srcFileName, rule.action.verb))
                     }
                 }
 
@@ -126,10 +115,7 @@ class FlowExecutor(private val context: Context) {
                             continue
                         }
 
-                        repository.registerExecution(
-                            rule,
-                            Execution(srcFileName, rule.action.verb),
-                        )
+                        repository.registerExecution(rule, Execution(srcFileName, rule.action.verb))
                     }
                 }
             }

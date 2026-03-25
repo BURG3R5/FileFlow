@@ -20,6 +20,13 @@ object Logger {
         logs.addLast("[${System.currentTimeMillis()}][$tag][INFO] $msg")
     }
 
+    fun w(tag: String, msg: String, tr: Throwable? = null) {
+        Log.w(tag, msg, tr)
+
+        if (logs.size >= Constants.LOG_SIZE) logs.removeFirst()
+        logs.addLast("[${System.currentTimeMillis()}][$tag][WARN] $msg")
+    }
+
     fun e(tag: String, msg: String, tr: Throwable? = null) {
         Log.e(tag, msg, tr)
 
