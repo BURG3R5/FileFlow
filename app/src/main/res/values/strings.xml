@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">FileFlow</string>
     <string name="app_name_launcher" translatable="false">FileFlow</string>
-    <string name="app_version" translatable="false">1.2.0</string>
+    <string name="app_version" translatable="false">1.3.0</string>
 
     <!-- region AboutScreen -->
     <string name="about">About</string>
