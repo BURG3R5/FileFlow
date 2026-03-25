@@ -1,6 +1,9 @@
 package co.adityarajput.fileflow.utils
 
 import android.content.Context
+import android.os.Build
+import android.os.Environment
+import android.os.storage.StorageManager
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import co.adityarajput.fileflow.data.models.Rule
@@ -205,3 +208,43 @@ fun String.getGetDirectoryFromUri() =
 
 fun Context.findRulesToBeMigrated(rules: List<Rule>) =
     rules.filter { File.fromPath(this, it.action.src) == null }
+
+fun Context.getAllStorages(): List<IOFile> {
+    val storages = mutableListOf<IOFile>()
+
+    try {
+        getExternalFilesDirs(null).forEach {
+            var storage = it
+            var dir = it
+            while (dir.parentFile != null) {
+                dir = dir.parentFile!!
+                if (dir.canRead())
+                    storage = dir
+            }
+            storages.add(storage)
+        }
+    } catch (e: Exception) {
+        Logger.e("Files", "Couldn't extract storages from external app directories", e)
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        try {
+            (getSystemService(Context.STORAGE_SERVICE) as StorageManager).getStorageVolumes()
+                .forEach {
+                    if (it.directory != null && it.directory!!.canRead()) {
+                        storages.add(it.directory!!)
+                    }
+                }
+        } catch (e: Exception) {
+            Logger.e("Files", "Couldn't extract storages from StorageManager", e)
+        }
+    }
+
+    Logger.d("Files", "Found storages: ${storages.joinToString { it.absolutePath }}")
+
+    return storages.distinct().apply {
+        val primaryStorage = Environment.getExternalStorageDirectory()
+        storages.remove(primaryStorage)
+        storages.add(0, primaryStorage)
+    }
+}
