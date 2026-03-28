@@ -14,6 +14,8 @@ class Repository(
 
     fun rules() = ruleDao.list()
 
+    fun rule(id: Int) = ruleDao.get(id)
+
     fun executions() = executionDao.list()
 
     suspend fun registerExecution(rule: Rule, execution: Execution) {

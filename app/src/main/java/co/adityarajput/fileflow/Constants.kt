@@ -10,4 +10,6 @@ object Constants {
     const val WORKER_NAME = "fileflow_worker"
 
     const val LOG_SIZE = 100
+
+    const val ONE_HOUR_IN_MILLIS = 3_600_000L
 }

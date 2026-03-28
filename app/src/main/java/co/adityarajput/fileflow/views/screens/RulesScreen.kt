@@ -102,7 +102,7 @@ fun RulesScreen(
                         ),
                         {
                             Text(
-                                it.action.getDescription(),
+                                it.getDescription(),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         },

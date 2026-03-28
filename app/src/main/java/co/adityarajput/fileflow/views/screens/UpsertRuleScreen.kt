@@ -2,6 +2,10 @@ package co.adityarajput.fileflow.views.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,15 +26,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
+import co.adityarajput.fileflow.Constants
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.utils.*
-import co.adityarajput.fileflow.viewmodels.FormError
-import co.adityarajput.fileflow.viewmodels.FormWarning
-import co.adityarajput.fileflow.viewmodels.Provider
-import co.adityarajput.fileflow.viewmodels.UpsertRuleViewModel
+import co.adityarajput.fileflow.viewmodels.*
 import co.adityarajput.fileflow.views.components.*
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun UpsertRuleScreen(
@@ -38,6 +41,7 @@ fun UpsertRuleScreen(
     goBack: () -> Unit,
     viewModel: UpsertRuleViewModel = viewModel(factory = Provider.createURVM(ruleString)),
 ) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
@@ -56,19 +60,28 @@ fun UpsertRuleScreen(
             Modifier.padding(paddingValues),
             Arrangement.SpaceBetween,
         ) {
-            Column(
+            AnimatedContent(
+                viewModel.state.page,
                 Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
                     .weight(1f)
                     .padding(dimensionResource(R.dimen.padding_small))
                     .padding(
                         dimensionResource(R.dimen.padding_large),
                         dimensionResource(R.dimen.padding_medium),
                     ),
-                Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium)),
+                { fadeIn() togetherWith fadeOut() },
             ) {
-                ActionPage(viewModel)
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium)),
+                ) {
+                    when (it) {
+                        FormPage.ACTION -> ActionPage(viewModel)
+                        FormPage.SCHEDULE -> SchedulePage(viewModel)
+                    }
+                }
             }
             Row(
                 Modifier
@@ -78,23 +91,40 @@ fun UpsertRuleScreen(
                 Alignment.Bottom,
             ) {
                 TextButton(
-                    goBack,
+                    {
+                        if (viewModel.state.page.isFirstPage()) {
+                            goBack()
+                        } else {
+                            viewModel.updateForm(
+                                context,
+                                page = viewModel.state.page.previous(),
+                            )
+                        }
+                    },
                     Modifier
                         .fillMaxWidth(0.5f)
                         .padding(end = dimensionResource(R.dimen.padding_small)),
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                 ) {
                     Text(
-                        stringResource(R.string.cancel),
+                        if (viewModel.state.page.isFirstPage()) stringResource(R.string.cancel)
+                        else stringResource(R.string.back),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Normal,
                     )
                 }
                 TextButton(
                     {
-                        coroutineScope.launch {
-                            viewModel.submitForm()
-                            goBack()
+                        if (viewModel.state.page.isFinalPage()) {
+                            coroutineScope.launch {
+                                viewModel.submitForm(context)
+                                goBack()
+                            }
+                        } else {
+                            viewModel.updateForm(
+                                context,
+                                page = viewModel.state.page.next(),
+                            )
                         }
                     },
                     Modifier
@@ -104,8 +134,10 @@ fun UpsertRuleScreen(
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
                 ) {
                     Text(
-                        if (viewModel.state.values.ruleId == 0) stringResource(R.string.add)
-                        else stringResource(R.string.save),
+                        if (viewModel.state.page.isFinalPage()) {
+                            if (viewModel.state.values.ruleId == 0) stringResource(R.string.add)
+                            else stringResource(R.string.save)
+                        } else stringResource(R.string.next),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
@@ -424,4 +456,130 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     if (viewModel.state.error == FormError.INVALID_REGEX) ErrorText(R.string.invalid_regex)
     else if (viewModel.state.error == FormError.INVALID_TEMPLATE) ErrorText(R.string.invalid_template)
     else if (viewModel.state.warning == FormWarning.NO_MATCHES_IN_SRC) WarningText(R.string.pattern_doesnt_match_src_files)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SchedulePage(viewModel: UpsertRuleViewModel) {
+    val context = LocalContext.current
+    var unit by remember { mutableStateOf(TimeUnit.HOURS) }
+    var expanded by remember { mutableStateOf(false) }
+
+    Text(
+        stringResource(R.string.schedule),
+        style = MaterialTheme.typography.bodyLarge,
+        fontWeight = FontWeight.Normal,
+    )
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .selectable(viewModel.state.values.interval == null) {
+                unit = TimeUnit.HOURS
+                viewModel.updateForm(
+                    context,
+                    viewModel.state.values.copy(interval = null),
+                )
+            },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(
+            viewModel.state.values.interval == null,
+            null,
+            Modifier.padding(horizontal = dimensionResource(R.dimen.padding_small)),
+        )
+        Text(
+            stringResource(R.string.never),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Normal,
+        )
+    }
+    val inputEnabled = viewModel.state.values.interval != null
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .selectable(inputEnabled) {
+                viewModel.updateForm(
+                    context,
+                    viewModel.state.values.copy(interval = Constants.ONE_HOUR_IN_MILLIS),
+                )
+            },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(
+            inputEnabled,
+            null,
+            Modifier.padding(horizontal = dimensionResource(R.dimen.padding_small)),
+        )
+        Text(
+            stringResource(R.string.once_every),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Normal,
+        )
+    }
+    val displayValue =
+        ((viewModel.state.values.interval ?: Constants.ONE_HOUR_IN_MILLIS) / unit.inMillis).toInt()
+    OutlinedTextField(
+        displayValue.toString(),
+        {
+            viewModel.updateForm(
+                context,
+                viewModel.state.values.copy(
+                    interval = it.toIntOrNull()?.times(unit.inMillis)
+                        ?: Constants.ONE_HOUR_IN_MILLIS,
+                ),
+            )
+        },
+        Modifier.fillMaxWidth(),
+        inputEnabled,
+        label = { Text(stringResource(R.string.interval)) },
+        placeholder = { Text(stringResource(R.string.interval_placeholder)) },
+        trailingIcon = {
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded },
+            ) {
+                Row(
+                    Modifier
+                        .clickable(inputEnabled) { expanded = true },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        unit.text(displayValue),
+                        Modifier.padding(start = dimensionResource(R.dimen.padding_medium)),
+                    )
+                    IconButton({ expanded = true }, enabled = inputEnabled) {
+                        Icon(
+                            painterResource(R.drawable.arrow_drop_down),
+                            stringResource(R.string.arrow_down),
+                        )
+                    }
+                }
+                ExposedDropdownMenu(expanded, { expanded = false }) {
+                    listOf(TimeUnit.MINUTES, TimeUnit.HOURS, TimeUnit.DAYS).forEach {
+                        DropdownMenuItem(
+                            { Text(it.text(displayValue)) },
+                            {
+                                unit = it
+                                expanded = false
+                            },
+                        )
+                    }
+                }
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+        ),
+    )
+    Text(
+        stringResource(R.string.interval_disclaimer),
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Normal,
+    )
+    if (viewModel.state.error == FormError.INTERVAL_TOO_SHORT) ErrorText(R.string.interval_too_short)
+    else if (viewModel.state.error == FormError.INTERVAL_TOO_LONG) ErrorText(R.string.interval_too_long)
 }

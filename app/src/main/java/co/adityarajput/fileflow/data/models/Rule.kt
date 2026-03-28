@@ -1,7 +1,15 @@
 package co.adityarajput.fileflow.data.models
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import co.adityarajput.fileflow.Constants
+import co.adityarajput.fileflow.utils.toAccurateHumanReadableTime
+import co.adityarajput.fileflow.views.dullStyle
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,6 +21,19 @@ data class Rule(
 
     val executions: Int = 0,
 
+    @ColumnInfo(defaultValue = "3600000")
+    val interval: Long? = Constants.ONE_HOUR_IN_MILLIS, // 1 hour
+
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-)
+) {
+    @Composable
+    fun getDescription(): AnnotatedString {
+        return action.getDescription() + buildAnnotatedString {
+            if (interval != null) {
+                withStyle(dullStyle) { append("\nevery ") }
+                append(interval.toAccurateHumanReadableTime())
+            }
+        }
+    }
+}

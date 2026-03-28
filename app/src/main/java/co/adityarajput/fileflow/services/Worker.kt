@@ -7,7 +7,7 @@ import androidx.work.WorkerParameters
 class Worker(private val context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        FlowExecutor(context).run()
+        FlowExecutor(context).run(inputData.getInt("ruleId", -1))
         return Result.success()
     }
 }

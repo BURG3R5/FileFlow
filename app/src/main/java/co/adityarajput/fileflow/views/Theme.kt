@@ -7,6 +7,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +58,8 @@ private val Typography = Typography().run {
         labelSmall.copy(fontFamily = firaMono),
     )
 }
+
+val dullStyle @Composable get() = SpanStyle(MaterialTheme.colorScheme.onSurfaceVariant)
 
 @Composable
 fun Theme(brightness: Brightness = Brightness.SYSTEM, content: @Composable () -> Unit) =

@@ -12,6 +12,7 @@ import co.adityarajput.fileflow.utils.File
 import co.adityarajput.fileflow.utils.FileSuperlative
 import co.adityarajput.fileflow.utils.getGetDirectoryFromUri
 import co.adityarajput.fileflow.utils.toShortHumanReadableTime
+import co.adityarajput.fileflow.views.dullStyle
 import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -55,8 +56,6 @@ sealed class Action {
 
         @Composable
         override fun getDescription() = buildAnnotatedString {
-            val dullStyle = SpanStyle(MaterialTheme.colorScheme.onSurfaceVariant)
-
             withStyle(dullStyle) { append("from ") }
             append(src.getGetDirectoryFromUri())
             if (scanSubdirectories)

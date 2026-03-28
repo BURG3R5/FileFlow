@@ -15,6 +15,9 @@ interface RuleDao {
     @Query("SELECT * from rules ORDER BY id ASC")
     fun list(): Flow<List<Rule>>
 
+    @Query("SELECT * from rules WHERE id = :id")
+    fun get(id: Int): Rule?
+
     @Query("UPDATE rules SET executions = executions + 1 WHERE id = :id")
     suspend fun registerExecution(id: Int)
 
