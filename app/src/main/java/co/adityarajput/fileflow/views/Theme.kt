@@ -1,10 +1,7 @@
 package co.adityarajput.fileflow.views
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Typography
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
@@ -60,6 +57,13 @@ private val Typography = Typography().run {
 }
 
 val dullStyle @Composable get() = SpanStyle(MaterialTheme.colorScheme.onSurfaceVariant)
+
+val textFieldColors
+    @Composable get() = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+    )
 
 @Composable
 fun Theme(brightness: Brightness = Brightness.SYSTEM, content: @Composable () -> Unit) =

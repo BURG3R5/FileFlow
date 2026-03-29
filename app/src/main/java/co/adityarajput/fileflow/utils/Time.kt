@@ -3,6 +3,11 @@ package co.adityarajput.fileflow.utils
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.pluralStringResource
 import co.adityarajput.fileflow.R
+import com.cronutils.model.CronType
+import com.cronutils.model.definition.CronDefinitionBuilder
+import com.cronutils.model.time.ExecutionTime
+import com.cronutils.parser.CronParser
+import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
 val TimeUnit.inMillis: Long
@@ -24,3 +29,24 @@ fun TimeUnit.text(value: Int) =
         },
         value, 0,
     ).substringAfter(' ')
+
+val ZonedDateTime.isToday get() = toLocalDate() == ZonedDateTime.now().toLocalDate()
+
+private val cronParser = CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX))
+
+fun String.getExecutionTimes(count: Int = 1): List<ZonedDateTime>? {
+    try {
+        val schedule = cronParser.parse(this)
+        val executionTime = ExecutionTime.forCron(schedule)
+        var next = executionTime.nextExecution(ZonedDateTime.now()).get()
+        val executions = mutableListOf<ZonedDateTime>()
+        repeat(count) {
+            executions.add(next)
+            next = executionTime.nextExecution(next).get()
+        }
+        return executions
+    } catch (_: IllegalArgumentException) {
+        Logger.d("Time", "Failed to parse $this")
+        return null
+    }
+}

@@ -12,6 +12,7 @@ import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.Rule
 import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.views.components.FolderPickerState
+import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
 class UpsertRuleViewModel(
@@ -41,6 +42,8 @@ class UpsertRuleViewModel(
         val predictedDestFileNames: List<String>? = null,
         val retentionDays: Int = 30,
         val interval: Long? = Constants.ONE_HOUR_IN_MILLIS,
+        val cronString: String? = null,
+        val predictedExecutionTimes: List<ZonedDateTime>? = null,
     ) {
         companion object {
             fun from(rule: Rule) = when (rule.action) {
@@ -52,6 +55,7 @@ class UpsertRuleViewModel(
                         rule.action.keepOriginal, rule.action.overwriteExisting,
                         rule.action.scanSubdirectories, rule.action.preserveStructure,
                         interval = rule.interval,
+                        cronString = rule.cronString,
                     )
 
                 is Action.DELETE_STALE ->
@@ -61,6 +65,7 @@ class UpsertRuleViewModel(
                         scanSubdirectories = rule.action.scanSubdirectories,
                         retentionDays = rule.action.retentionDays,
                         interval = rule.interval,
+                        cronString = rule.cronString,
                     )
             }
         }
@@ -74,6 +79,7 @@ class UpsertRuleViewModel(
                         preserveStructure,
                     ),
                     interval = interval,
+                    cronString = cronString,
                     id = ruleId,
                 )
 
@@ -81,6 +87,7 @@ class UpsertRuleViewModel(
                 Rule(
                     Action.DELETE_STALE(src, srcFileNamePattern, retentionDays, scanSubdirectories),
                     interval = interval,
+                    cronString = cronString,
                     id = ruleId,
                 )
         }
@@ -124,6 +131,7 @@ class UpsertRuleViewModel(
         val values = values.copy(
             currentSrcFileNames = currentSrcFiles.orEmpty().mapNotNull { it.name }.distinct(),
             predictedDestFileNames = predictedDestFileNames,
+            predictedExecutionTimes = values.cronString?.getExecutionTimes(4),
         )
         state = State(page, values, warning = warning)
     }
@@ -155,7 +163,7 @@ enum class FormPage {
 
 enum class FormError {
     BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE,
-    INTERVAL_TOO_SHORT, INTERVAL_TOO_LONG;
+    INTERVAL_TOO_SHORT, INTERVAL_TOO_LONG, INVALID_CRON_STRING, CRON_TOO_FREQUENT;
 
     companion object {
         fun from(values: UpsertRuleViewModel.Values): FormError? {
@@ -172,16 +180,26 @@ enum class FormError {
                     if (values.predictedDestFileNames == null)
                         return INVALID_TEMPLATE
                 }
-
-                if (values.interval != null) {
-                    if (values.interval < PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS)
-                        return INTERVAL_TOO_SHORT
-                    if (values.interval > 7 * TimeUnit.DAYS.inMillis)
-                        return INTERVAL_TOO_LONG
-                }
             } catch (_: Exception) {
                 Logger.d("UpsertRuleViewModel", "Invalid regex")
                 return INVALID_REGEX
+            }
+
+            if (values.interval != null) {
+                if (values.interval < PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS)
+                    return INTERVAL_TOO_SHORT
+                if (values.interval > 7 * TimeUnit.DAYS.inMillis)
+                    return INTERVAL_TOO_LONG
+            }
+            if (values.cronString != null) {
+                val executionTimes =
+                    values.cronString.getExecutionTimes(Constants.MAX_CRON_EXECUTIONS_PER_HOUR + 1)
+                        ?: return INVALID_CRON_STRING
+
+                if (
+                    executionTimes.last().toEpochSecond() - executionTimes.first().toEpochSecond()
+                    < Constants.ONE_HOUR_IN_MILLIS / 1000
+                ) return CRON_TOO_FREQUENT
             }
             return null
         }

@@ -22,7 +22,10 @@ data class Rule(
     val executions: Int = 0,
 
     @ColumnInfo(defaultValue = "3600000")
-    val interval: Long? = Constants.ONE_HOUR_IN_MILLIS, // 1 hour
+    val interval: Long? = Constants.ONE_HOUR_IN_MILLIS,
+
+    @ColumnInfo(defaultValue = "NULL")
+    val cronString: String? = null,
 
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
@@ -33,6 +36,10 @@ data class Rule(
             if (interval != null) {
                 withStyle(dullStyle) { append("\nevery ") }
                 append(interval.toAccurateHumanReadableTime())
+            }
+            if (cronString != null) {
+                withStyle(dullStyle) { append("\nwhen ") }
+                append(cronString)
             }
         }
     }
