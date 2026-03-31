@@ -5,21 +5,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.work.PeriodicWorkRequest
+import co.adityarajput.fileflow.Constants
 import co.adityarajput.fileflow.data.Repository
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.Rule
-import co.adityarajput.fileflow.utils.File
-import co.adityarajput.fileflow.utils.FileSuperlative
-import co.adityarajput.fileflow.utils.Logger
+import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.views.components.FolderPickerState
+import java.time.ZonedDateTime
+import java.util.concurrent.TimeUnit
 
 class UpsertRuleViewModel(
     rule: Rule?,
     private val repository: Repository,
 ) : ViewModel() {
     data class State(
+        val page: FormPage = FormPage.ACTION,
         val values: Values = Values(),
-        val error: FormError? = null,
+        val error: FormError? = FormError.from(values),
         val warning: FormWarning? = null,
     )
 
@@ -38,6 +41,9 @@ class UpsertRuleViewModel(
         val currentSrcFileNames: List<String>? = null,
         val predictedDestFileNames: List<String>? = null,
         val retentionDays: Int = 30,
+        val interval: Long? = Constants.ONE_HOUR_IN_MILLIS,
+        val cronString: String? = null,
+        val predictedExecutionTimes: List<ZonedDateTime>? = null,
     ) {
         companion object {
             fun from(rule: Rule) = when (rule.action) {
@@ -48,6 +54,8 @@ class UpsertRuleViewModel(
                         rule.action.destFileNameTemplate, rule.action.superlative,
                         rule.action.keepOriginal, rule.action.overwriteExisting,
                         rule.action.scanSubdirectories, rule.action.preserveStructure,
+                        interval = rule.interval,
+                        cronString = rule.cronString,
                     )
 
                 is Action.DELETE_STALE ->
@@ -56,6 +64,8 @@ class UpsertRuleViewModel(
                         rule.action.srcFileNamePattern,
                         scanSubdirectories = rule.action.scanSubdirectories,
                         retentionDays = rule.action.retentionDays,
+                        interval = rule.interval,
+                        cronString = rule.cronString,
                     )
             }
         }
@@ -68,12 +78,16 @@ class UpsertRuleViewModel(
                         scanSubdirectories, keepOriginal, overwriteExisting, superlative,
                         preserveStructure,
                     ),
+                    interval = interval,
+                    cronString = cronString,
                     id = ruleId,
                 )
 
             is Action.DELETE_STALE ->
                 Rule(
                     Action.DELETE_STALE(src, srcFileNamePattern, retentionDays, scanSubdirectories),
+                    interval = interval,
+                    cronString = cronString,
                     id = ruleId,
                 )
         }
@@ -81,12 +95,12 @@ class UpsertRuleViewModel(
 
     var state by mutableStateOf(
         if (rule == null) State()
-        else State(Values.from(rule), null),
+        else State(values = Values.from(rule)),
     )
 
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
 
-    fun updateForm(context: Context, values: Values) {
+    fun updateForm(context: Context, values: Values = state.values, page: FormPage = state.page) {
         var currentSrcFiles: List<File>? = null
         try {
             if (values.src.isNotBlank())
@@ -117,42 +131,79 @@ class UpsertRuleViewModel(
         val values = values.copy(
             currentSrcFileNames = currentSrcFiles.orEmpty().mapNotNull { it.name }.distinct(),
             predictedDestFileNames = predictedDestFileNames,
+            predictedExecutionTimes = values.cronString?.getExecutionTimes(4),
         )
-        state = State(values, getError(values), warning)
+        state = State(page, values, warning = warning)
     }
 
-    private fun getError(values: Values): FormError? {
-        try {
-            if (values.src.isBlank() || values.srcFileNamePattern.isBlank())
-                return FormError.BLANK_FIELDS
-
-            if (Regex(values.srcFileNamePattern).pattern != values.srcFileNamePattern)
-                return FormError.INVALID_REGEX
-
-            if (values.actionBase is Action.MOVE) {
-                if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
-                    return FormError.BLANK_FIELDS
-                if (values.predictedDestFileNames == null)
-                    return FormError.INVALID_TEMPLATE
-            }
-        } catch (_: Exception) {
-            Logger.d("UpsertRuleViewModel", "Invalid regex")
-            return FormError.INVALID_REGEX
-        }
-        return null
-    }
-
-    suspend fun submitForm() {
-        if (getError(state.values) == null) {
+    suspend fun submitForm(context: Context) {
+        if (FormError.from(state.values) == null) {
             val rule = state.values.toRule()
             Logger.d(
                 "UpsertRuleViewModel",
                 "${if (state.values.ruleId == 0) "Adding" else "Updating"} $rule",
             )
             repository.upsert(rule)
+            context.scheduleWork()
         }
     }
 }
 
-enum class FormError { BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE }
+enum class FormPage {
+    ACTION, SCHEDULE;
+
+    fun isFirstPage() = this == ACTION
+
+    fun isFinalPage() = this == SCHEDULE
+
+    fun next() = entries[ordinal + 1]
+
+    fun previous() = entries[ordinal - 1]
+}
+
+enum class FormError {
+    BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE,
+    INTERVAL_TOO_SHORT, INTERVAL_TOO_LONG, INVALID_CRON_STRING, CRON_TOO_FREQUENT;
+
+    companion object {
+        fun from(values: UpsertRuleViewModel.Values): FormError? {
+            try {
+                if (values.src.isBlank() || values.srcFileNamePattern.isBlank())
+                    return BLANK_FIELDS
+
+                if (Regex(values.srcFileNamePattern).pattern != values.srcFileNamePattern)
+                    return INVALID_REGEX
+
+                if (values.actionBase is Action.MOVE) {
+                    if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
+                        return BLANK_FIELDS
+                    if (values.predictedDestFileNames == null)
+                        return INVALID_TEMPLATE
+                }
+            } catch (_: Exception) {
+                Logger.d("UpsertRuleViewModel", "Invalid regex")
+                return INVALID_REGEX
+            }
+
+            if (values.interval != null) {
+                if (values.interval < PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS)
+                    return INTERVAL_TOO_SHORT
+                if (values.interval > 7 * TimeUnit.DAYS.inMillis)
+                    return INTERVAL_TOO_LONG
+            }
+            if (values.cronString != null) {
+                val executionTimes =
+                    values.cronString.getExecutionTimes(Constants.MAX_CRON_EXECUTIONS_PER_HOUR + 1)
+                        ?: return INVALID_CRON_STRING
+
+                if (
+                    executionTimes.last().toEpochSecond() - executionTimes.first().toEpochSecond()
+                    < Constants.ONE_HOUR_IN_MILLIS / 1000
+                ) return CRON_TOO_FREQUENT
+            }
+            return null
+        }
+    }
+}
+
 enum class FormWarning { NO_MATCHES_IN_SRC }

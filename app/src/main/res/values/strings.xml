@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">FileFlow</string>
     <string name="app_name_launcher" translatable="false">FileFlow</string>
-    <string name="app_version" translatable="false">1.3.0</string>
+    <string name="app_version" translatable="false">1.4.0</string>
 
     <!-- region AboutScreen -->
     <string name="about">About</string>
@@ -91,8 +91,10 @@
 
     <!-- region UpsertRuleScreen -->
     <string name="cancel">Cancel</string>
+    <string name="back">Back</string>
     <string name="add">Add</string>
     <string name="save">Save</string>
+    <string name="next">Next</string>
     <string name="action">Action:</string>
     <string name="source">"Source: "</string>
     <string name="select_folder">select folder</string>
@@ -119,6 +121,22 @@
     <string name="invalid_regex">Regex pattern contains errors</string>
     <string name="invalid_template">Regex template contains errors</string>
     <string name="pattern_doesnt_match_src_files">"Regex pattern doesn't match any file in the source folder"</string>
+    <string name="schedule">Schedule:</string>
+    <string name="never">Never</string>
+    <string name="periodic">Periodic</string>
+    <string name="interval">Interval</string>
+    <string name="interval_placeholder">Enter an interval</string>
+    <string name="interval_disclaimer">"Interval is approximate: it is up to the OS to decide the exact execution time."</string>
+    <string name="interval_too_short">Due to OS restrictions, interval cannot be shorter than 15 minutes</string>
+    <string name="interval_too_long">To ensure proper execution, interval cannot be longer than 7 days</string>
+    <string name="cron_like">Cron-like</string>
+    <string name="cron_string">Cron string</string>
+    <string name="cron_placeholder">Enter a crontab string</string>
+    <string name="rule_will_execute_at">Rule will execute at %1$s</string>
+    <string name="cron_advice"><![CDATA[Click <a href=\"https://github.com/BURG3R5/FileFlow/wiki/Cron-Examples\">here↗</a> for example cron strings.]]></string>
+    <string name="exact_alarm_permission_description">FileFlow requires exemption from battery optimization to follow schedules exactly.</string>
+    <string name="invalid_cron_string">Cron string contains errors</string>
+    <string name="cron_too_frequent">To avoid rate-limiting by OS, rules cannot execute more than 4 times an hour</string>
     <!-- region Action -->
     <string name="move_phrase">Copy or move to another folder</string>
     <string name="delete_stale_phrase">Delete if unmodified for a while</string>

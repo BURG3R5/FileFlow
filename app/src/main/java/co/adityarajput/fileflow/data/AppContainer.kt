@@ -17,10 +17,7 @@ class AppContainer(private val context: Context) {
 
     fun seedDemoData() {
         runBlocking {
-            if (
-                repository.rules().first().isEmpty() &&
-                repository.executions().first().isEmpty()
-            ) {
+            if (repository.rules().first().isEmpty()) {
                 repository.upsert(
                     Rule(
                         Action.MOVE(
@@ -31,6 +28,8 @@ class AppContainer(private val context: Context) {
                             overwriteExisting = true,
                         ),
                         executions = 2,
+                        interval = null,
+                        cronString = "00 10 * * 0",
                     ),
                     Rule(
                         Action.MOVE(
@@ -42,6 +41,7 @@ class AppContainer(private val context: Context) {
                             overwriteExisting = true,
                         ),
                         executions = 3,
+                        interval = null,
                     ),
                     Rule(
                         Action.DELETE_STALE(
@@ -50,6 +50,7 @@ class AppContainer(private val context: Context) {
                             scanSubdirectories = true,
                         ),
                         enabled = false,
+                        interval = 86_400_000,
                     ),
                 )
                 repository.upsert(

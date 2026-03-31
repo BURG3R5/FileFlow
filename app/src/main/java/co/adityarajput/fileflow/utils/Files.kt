@@ -7,7 +7,12 @@ import android.os.storage.StorageManager
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import co.adityarajput.fileflow.data.models.Rule
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.net.URLDecoder
+import java.nio.file.FileAlreadyExistsException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.io.File as IOFile
 
 sealed class File {
@@ -31,9 +36,91 @@ sealed class File {
         }
     }
 
-    class SAFFile(val documentFile: DocumentFile) : File()
+    class SAFFile(val documentFile: DocumentFile) : File() {
+        override suspend fun moveTo(
+            destDir: File,
+            destFileName: String,
+            keepOriginal: Boolean,
+            overwriteExisting: Boolean,
+            context: Context,
+        ) {
+            if (destDir !is SAFFile)
+                throw IllegalArgumentException("Destination directory must be a SAFFile")
 
-    class FSFile(val ioFile: IOFile) : File()
+            destDir.documentFile.findFile(destFileName)?.run {
+                if (overwriteExisting) delete()
+                else throw Exception("$destFileName already exists")
+            }
+
+            val destFile =
+                destDir.documentFile.createFile(type ?: "application/octet-stream", destFileName)!!
+
+            val resolver = context.contentResolver
+            resolver.openInputStream(this.documentFile.uri).use { srcStream ->
+                resolver.openOutputStream(destFile.uri).use { destStream ->
+                    srcStream!!.copyTo(destStream!!)
+                }
+            }
+
+            if (!keepOriginal) delete()
+        }
+    }
+
+    class FSFile(val ioFile: IOFile) : File() {
+        override suspend fun moveTo(
+            destDir: File,
+            destFileName: String,
+            keepOriginal: Boolean,
+            overwriteExisting: Boolean,
+            context: Context,
+        ) {
+            if (destDir !is FSFile)
+                throw IllegalArgumentException("Destination directory must be a FSFile")
+
+            val options = mutableListOf<StandardCopyOption>()
+            if (keepOriginal) options.add(StandardCopyOption.COPY_ATTRIBUTES)
+            if (overwriteExisting) options.add(StandardCopyOption.REPLACE_EXISTING)
+
+            try {
+                withContext(Dispatchers.IO) {
+                    if (keepOriginal) {
+                        Files.copy(
+                            this@FSFile.ioFile.toPath(),
+                            destDir.ioFile.toPath().resolve(destFileName),
+                            *options.toTypedArray(),
+                        )
+                    } else {
+                        Files.move(
+                            this@FSFile.ioFile.toPath(),
+                            destDir.ioFile.toPath().resolve(destFileName),
+                            *options.toTypedArray(),
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                if (e is FileAlreadyExistsException) throw e
+
+                Logger.w(
+                    "Files",
+                    "Failed to move file, falling back to create + copy [+ delete].",
+                    e,
+                )
+
+                val destFile = IOFile(destDir.ioFile, destFileName)
+                withContext(Dispatchers.IO) {
+                    destFile.createNewFile()
+
+                    this@FSFile.ioFile.inputStream().use { srcStream ->
+                        destFile.outputStream().use { destStream ->
+                            srcStream.copyTo(destStream)
+                        }
+                    }
+                }
+
+                if (!keepOriginal) delete()
+            }
+        }
+    }
 
     val name
         get() = when (this) {
@@ -122,17 +209,6 @@ sealed class File {
         return false
     }
 
-    fun createFile(type: String?, name: String): File? {
-        return when (this) {
-            is SAFFile -> documentFile
-                .createFile(type ?: "application/octet-stream", name)
-                ?.let { SAFFile(it) }
-
-            is FSFile -> IOFile(ioFile, name)
-                .let { if (it.createNewFile()) FSFile(it) else null }
-        }
-    }
-
     fun createDirectory(relativePath: String): File? {
         return when (this) {
             is SAFFile -> {
@@ -160,38 +236,18 @@ sealed class File {
         }
     }
 
+    abstract suspend fun moveTo(
+        destDir: File,
+        destFileName: String,
+        keepOriginal: Boolean,
+        overwriteExisting: Boolean,
+        context: Context,
+    )
+
     fun delete() = when (this) {
         is SAFFile -> documentFile.delete()
         is FSFile -> ioFile.delete()
     }
-}
-
-fun Context.copyFile(src: File, dest: File): Boolean {
-    val resolver = contentResolver
-
-    if (src is File.SAFFile && dest is File.SAFFile) {
-        resolver.openInputStream(src.documentFile.uri).use { srcStream ->
-            resolver.openOutputStream(dest.documentFile.uri).use { destStream ->
-                if (srcStream == null || destStream == null) {
-                    Logger.e("Files", "Failed to open file(s)")
-                    return false
-                }
-                Logger.i("Files", "Copying ${src.name} to ${dest.name}")
-                srcStream.copyTo(destStream)
-                return true
-            }
-        }
-    } else if (src is File.FSFile && dest is File.FSFile) {
-        src.ioFile.inputStream().use { srcStream ->
-            dest.ioFile.outputStream().use { destStream ->
-                Logger.i("Files", "Copying ${src.name} to ${dest.name}")
-                srcStream.copyTo(destStream)
-                return true
-            }
-        }
-    }
-
-    return false
 }
 
 fun String.getGetDirectoryFromUri() =

@@ -23,5 +23,22 @@ fun Long.toShortHumanReadableTime(): String {
 }
 
 @Composable
+fun Long.toAccurateHumanReadableTime(): String {
+    val minutes = this / 60_000f
+    val hours = minutes / 60
+    val days = hours / 24
+
+    return when {
+        days > 0 && days.toInt().toFloat() == days
+            -> pluralStringResource(R.plurals.day, days.toInt(), days.toInt())
+
+        hours > 0 && hours.toInt().toFloat() == hours
+            -> pluralStringResource(R.plurals.hour, hours.toInt(), hours.toInt())
+
+        else -> pluralStringResource(R.plurals.minute, minutes.toInt(), minutes.toInt())
+    }
+}
+
+@Composable
 fun Boolean.getToggleString(): String =
     stringResource(if (this) R.string.disable else R.string.enable)

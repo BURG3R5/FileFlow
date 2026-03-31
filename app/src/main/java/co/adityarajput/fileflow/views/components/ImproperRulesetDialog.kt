@@ -60,7 +60,7 @@ fun ImproperRulesetDialog(
                             ),
                             {
                                 Text(
-                                    it.action.getDescription(),
+                                    it.getDescription(),
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             },

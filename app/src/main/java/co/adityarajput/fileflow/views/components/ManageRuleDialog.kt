@@ -58,8 +58,8 @@ fun ManageRuleDialog(viewModel: RulesViewModel) {
                 TextButton(
                     {
                         when (dialogState) {
-                            DialogState.TOGGLE_RULE -> viewModel.toggleRule()
-                            DialogState.DELETE -> viewModel.deleteRule()
+                            DialogState.TOGGLE_RULE -> viewModel.toggleRule(context)
+                            DialogState.DELETE -> viewModel.deleteRule(context)
                             DialogState.EXECUTE -> viewModel.executeRule(context) {
                                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
                             }

@@ -8,6 +8,11 @@ object Constants {
     const val BRIGHTNESS = "brightness"
 
     const val WORKER_NAME = "fileflow_worker"
+    const val ACTION_EXECUTE_RULE = "co.adityarajput.fileflow.EXECUTE_RULE"
+    const val EXTRA_RULE_ID = "extra_rule_id"
+    const val MAX_CRON_EXECUTIONS_PER_HOUR = 4
 
     const val LOG_SIZE = 100
+
+    const val ONE_HOUR_IN_MILLIS = 3_600_000L
 }

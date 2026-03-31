@@ -7,9 +7,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.adityarajput.fileflow.data.Repository
+import co.adityarajput.fileflow.data.models.Execution
 import co.adityarajput.fileflow.data.models.Rule
-import co.adityarajput.fileflow.services.FlowExecutor
 import co.adityarajput.fileflow.utils.Logger
+import co.adityarajput.fileflow.utils.deleteWorkFor
+import co.adityarajput.fileflow.utils.scheduleWork
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -31,7 +33,12 @@ class RulesViewModel(private val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             val latestLogBeforeExecution = Logger.logs.lastOrNull()
 
-            FlowExecutor(context).run(listOf(selectedRule!!))
+            selectedRule!!.action.execute(context) {
+                repository.registerExecution(
+                    selectedRule!!,
+                    Execution(it, selectedRule!!.action.verb),
+                )
+            }
 
             val recentErrorLog = Logger.logs
                 .dropWhile { it != latestLogBeforeExecution }.drop(1)
@@ -42,16 +49,22 @@ class RulesViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
-    fun toggleRule() {
+    fun toggleRule(context: Context) {
         viewModelScope.launch {
             Logger.d("RulesViewModel", "Toggling enabled state of $selectedRule")
+            if (selectedRule!!.enabled) {
+                context.deleteWorkFor(selectedRule!!)
+            } else {
+                context.scheduleWork()
+            }
             repository.toggle(selectedRule!!)
         }
     }
 
-    fun deleteRule() {
+    fun deleteRule(context: Context) {
         viewModelScope.launch {
             Logger.d("RulesViewModel", "Deleting $selectedRule")
+            context.deleteWorkFor(selectedRule!!)
             repository.delete(selectedRule!!)
         }
     }

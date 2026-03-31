@@ -19,6 +19,7 @@ FileFlow scans your files periodically and organizes them according to your rule
 - **Actions** - Choose what to do to your files ⚙
   1. Copy, move, or rename files 📁
   2. Delete stale files 🗑
+- **Schedule** - Choose when and how often rules run ⏰
 - **History** - Recent executions are stored (locally) ⏳
 - **Free, open-source & private**
     - No ads, subscriptions, or in-app purchases 🆓

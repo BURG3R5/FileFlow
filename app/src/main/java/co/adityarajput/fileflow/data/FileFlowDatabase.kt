@@ -8,10 +8,12 @@ import co.adityarajput.fileflow.data.models.Rule
 
 @Database(
     [Rule::class, Execution::class],
-    version = 3,
+    version = 5,
     autoMigrations = [
         AutoMigration(1, 2),
         AutoMigration(2, 3, FileFlowDatabase.DeleteEColumnAV::class),
+        AutoMigration(3, 4),
+        AutoMigration(4, 5),
     ],
 )
 @TypeConverters(Converters::class)
