@@ -1,0 +1,6 @@
+• fix: Actually copy/move files instead of (create + copy [+ delete])
+• feat: Let user choose execution time and frequency
+
+You can now configure each rule's individual execution schedule. Advanced users can use cron expressions to control execution more precisely.
+
+IMPORTANT: After updating, open the app at least once, to trigger the new scheduling system.
