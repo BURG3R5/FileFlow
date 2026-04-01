@@ -13,8 +13,6 @@ import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.views.dullStyle
 import kotlinx.serialization.Serializable
 import java.nio.file.FileAlreadyExistsException
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 @Suppress("ClassName")
 @Serializable
@@ -69,16 +67,15 @@ sealed class Action {
             append(destFileNameTemplate)
         }
 
-        @OptIn(ExperimentalUuidApi::class)
         fun getDestFileName(srcFile: File) =
             srcFile.name!!.replace(
                 Regex(srcFileNamePattern),
-                destFileNameTemplate.replace(
-                    $$"${uuid}",
-                    Uuid.random().toString(),
-                ).replace(
+                destFileNameTemplate.applyCustomReplacements().replace(
                     $$"${folder}",
                     srcFile.parent?.name ?: "",
+                ).replace(
+                    $$"${extension}",
+                    srcFile.extension,
                 ),
             )
 

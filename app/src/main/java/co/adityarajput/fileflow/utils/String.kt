@@ -4,6 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import co.adityarajput.fileflow.R
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Composable
 fun Long.toShortHumanReadableTime(): String {
@@ -42,3 +46,24 @@ fun Long.toAccurateHumanReadableTime(): String {
 @Composable
 fun Boolean.getToggleString(): String =
     stringResource(if (this) R.string.disable else R.string.enable)
+
+@OptIn(ExperimentalUuidApi::class)
+fun String.applyCustomReplacements() = this
+    .replace(
+        $$"${uuid}",
+        Uuid.random().toString(),
+    )
+    .replace(
+        $$"${date}",
+        ZonedDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
+    )
+    .replace(
+        $$"${time}",
+        ZonedDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME),
+    )
+    .replace(
+        Regex("\\$\\{datetime:([^}]+)}"),
+        { result ->
+            ZonedDateTime.now().format(DateTimeFormatter.ofPattern(result.groupValues[1]))
+        },
+    )

@@ -122,6 +122,12 @@ sealed class File {
         }
     }
 
+    val extension
+        get() = when (this) {
+            is SAFFile -> documentFile.name?.substringAfterLast('.', "").orEmpty()
+            is FSFile -> ioFile.extension
+        }
+
     val name
         get() = when (this) {
             is SAFFile -> documentFile.name
