@@ -6,4 +6,5 @@ enum class Verb(val resource: Int) {
     MOVE(R.string.move),
     COPY(R.string.copy),
     DELETE_STALE(R.string.delete_stale),
+    ZIP(R.string.zip),
 }

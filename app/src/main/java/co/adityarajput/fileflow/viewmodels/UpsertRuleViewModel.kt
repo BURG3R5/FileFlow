@@ -67,30 +67,42 @@ class UpsertRuleViewModel(
                         interval = rule.interval,
                         cronString = rule.cronString,
                     )
+
+                is Action.ZIP -> Values(
+                    rule.id, rule.action.base, rule.action.src,
+                    rule.action.srcFileNamePattern, rule.action.dest,
+                    rule.action.destFileNameTemplate,
+                    overwriteExisting = rule.action.overwriteExisting,
+                    scanSubdirectories = rule.action.scanSubdirectories,
+                    preserveStructure = rule.action.preserveStructure,
+                    interval = rule.interval,
+                    cronString = rule.cronString,
+                )
             }
         }
 
-        fun toRule() = when (actionBase) {
-            is Action.MOVE ->
-                Rule(
+        fun toRule() = Rule(
+            when (actionBase) {
+                is Action.MOVE ->
                     Action.MOVE(
                         src, srcFileNamePattern, dest, destFileNameTemplate,
                         scanSubdirectories, keepOriginal, overwriteExisting, superlative,
                         preserveStructure,
-                    ),
-                    interval = interval,
-                    cronString = cronString,
-                    id = ruleId,
-                )
+                    )
 
-            is Action.DELETE_STALE ->
-                Rule(
-                    Action.DELETE_STALE(src, srcFileNamePattern, retentionDays, scanSubdirectories),
-                    interval = interval,
-                    cronString = cronString,
-                    id = ruleId,
-                )
-        }
+                is Action.DELETE_STALE ->
+                    Action.DELETE_STALE(src, srcFileNamePattern, retentionDays, scanSubdirectories)
+
+                is Action.ZIP ->
+                    Action.ZIP(
+                        src, srcFileNamePattern, dest, destFileNameTemplate,
+                        scanSubdirectories, overwriteExisting, preserveStructure,
+                    )
+            },
+            interval = interval,
+            cronString = cronString,
+            id = ruleId,
+        )
     }
 
     var state by mutableStateOf(
@@ -120,10 +132,16 @@ class UpsertRuleViewModel(
                 ?.filter { regex.matches(it.name!!) }
                 ?.also { if (it.isEmpty()) warning = FormWarning.NO_MATCHES_IN_SRC }
 
-            if (matchingSrcFiles != null && values.destFileNameTemplate.isNotBlank()) {
-                predictedDestFileNames = matchingSrcFiles
-                    .map { (values.toRule().action as Action.MOVE).getDestFileName(it) }
-                    .distinct()
+            if (values.destFileNameTemplate.isNotBlank()) {
+                if (matchingSrcFiles != null && values.actionBase is Action.MOVE) {
+                    predictedDestFileNames = matchingSrcFiles
+                        .map { (values.toRule().action as Action.MOVE).getDestFileName(it) }
+                        .distinct()
+                }
+                if (values.actionBase is Action.ZIP) {
+                    predictedDestFileNames =
+                        listOf((values.toRule().action as Action.ZIP).getDestFileName())
+                }
             }
         } catch (_: Exception) {
         }
@@ -162,7 +180,7 @@ enum class FormPage {
 }
 
 enum class FormError {
-    BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE,
+    BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE, MUST_END_IN_ZIP,
     INTERVAL_TOO_SHORT, INTERVAL_TOO_LONG, INVALID_CRON_STRING, CRON_TOO_FREQUENT;
 
     companion object {
@@ -179,6 +197,14 @@ enum class FormError {
                         return BLANK_FIELDS
                     if (values.predictedDestFileNames == null)
                         return INVALID_TEMPLATE
+                }
+                if (values.actionBase is Action.ZIP) {
+                    if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
+                        return BLANK_FIELDS
+                    if (values.predictedDestFileNames?.size != 1)
+                        return INVALID_TEMPLATE
+                    if (!Regex("^.+\\.(zip|ZIP)$").matches(values.predictedDestFileNames.first()))
+                        return MUST_END_IN_ZIP
                 }
             } catch (_: Exception) {
                 Logger.d("UpsertRuleViewModel", "Invalid regex")
