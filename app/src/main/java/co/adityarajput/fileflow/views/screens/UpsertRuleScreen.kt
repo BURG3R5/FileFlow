@@ -254,7 +254,6 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 )
         },
         colors = textFieldColors,
-        singleLine = true,
     )
     when (viewModel.state.values.actionBase) {
         is Action.MOVE -> {
@@ -389,7 +388,6 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                     }
                 },
                 colors = textFieldColors,
-                singleLine = true,
             )
             Row(
                 Modifier.toggleable(viewModel.state.values.overwriteExisting) {
@@ -498,7 +496,6 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                     }
                 },
                 colors = textFieldColors,
-                singleLine = true,
             )
             Row(
                 Modifier.toggleable(viewModel.state.values.overwriteExisting) {
