@@ -59,7 +59,7 @@ fun String.applyCustomReplacements() = this
     )
     .replace(
         $$"${time}",
-        ZonedDateTime.now().withNano(0).format(DateTimeFormatter.ISO_LOCAL_TIME),
+        ZonedDateTime.now().withNano(0).format(DateTimeFormatter.ISO_LOCAL_TIME).replace(":", "-"),
     )
     .replace(
         Regex("\\$\\{datetime:([^}]+)\\}"),
