@@ -51,10 +51,23 @@ fun Navigator(controller: NavHostController, appearanceViewModel: AppearanceView
         composable(Routes.EXECUTIONS.name) { ExecutionsScreen(controller::popBackStack) }
         composable(Routes.SETTINGS.name) {
             SettingsScreen(
+                { controller.navigate(Routes.GROUPS.name) },
                 { controller.navigate(Routes.LICENSES.name) },
                 { controller.navigate(Routes.ABOUT.name) },
                 controller::popBackStack,
                 appearanceViewModel,
+            )
+        }
+        composable(Routes.GROUPS.name) {
+            GroupsScreen(
+                { controller.navigate(UpsertGroupRoute(it)) },
+                controller::popBackStack,
+            )
+        }
+        composable<UpsertGroupRoute> {
+            UpsertGroupScreen(
+                it.toRoute<UpsertGroupRoute>().groupString,
+                controller::popBackStack,
             )
         }
         composable(Routes.LICENSES.name) { LicensesScreen(controller::popBackStack) }
@@ -67,9 +80,13 @@ enum class Routes {
     RULES,
     EXECUTIONS,
     SETTINGS,
+    GROUPS,
     LICENSES,
     ABOUT,
 }
 
 @Serializable
 data class UpsertRuleRoute(val ruleString: String = "null")
+
+@Serializable
+data class UpsertGroupRoute(val groupString: String = "null")

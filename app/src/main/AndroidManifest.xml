@@ -35,11 +35,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ShortcutActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+
         <receiver
             android:name=".AlarmReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="co.adityarajput.fileflow.EXECUTE_RULE" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".ShortcutReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="co.adityarajput.fileflow.EXECUTE_GROUP" />
             </intent-filter>
         </receiver>
     </application>

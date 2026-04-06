@@ -41,6 +41,7 @@ private val permissions = listOf(
 
 @Composable
 fun SettingsScreen(
+    goToGroupsScreen: () -> Unit = {},
     goToLicensesScreen: () -> Unit = {},
     goToAboutScreen: () -> Unit = {},
     goBack: () -> Unit = {},
@@ -186,6 +187,31 @@ fun SettingsScreen(
                                 )
                             }
                         }
+                    }
+                }
+                Card(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(dimensionResource(R.dimen.padding_small)),
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { goToGroupsScreen() }
+                            .padding(
+                                dimensionResource(R.dimen.padding_large),
+                                dimensionResource(R.dimen.padding_medium),
+                            ),
+                        Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.group),
+                            stringResource(R.string.groups),
+                        )
+                        Text(
+                            stringResource(R.string.manage_groups),
+                            fontWeight = FontWeight.Medium,
+                        )
                     }
                 }
                 Card(
