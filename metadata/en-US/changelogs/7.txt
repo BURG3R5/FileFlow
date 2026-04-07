@@ -1,0 +1,6 @@
+• feat: Add four special references for templates (check project wiki for details)
+• feat: Add "ZIP" action
+• feat: Add shortcuts that execute groups of rules
+• fix: Auto-fetch initial filenames when editing rules
+
+App shortcuts are now supported, enabling quick execution of groups of rules. Head to "Manage groups" under the app settings to set up shortcuts.
