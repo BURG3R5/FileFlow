@@ -122,6 +122,12 @@ sealed class File {
         }
     }
 
+    val extension
+        get() = when (this) {
+            is SAFFile -> documentFile.name?.substringAfterLast('.', "").orEmpty()
+            is FSFile -> ioFile.extension
+        }
+
     val name
         get() = when (this) {
             is SAFFile -> documentFile.name
@@ -168,8 +174,19 @@ sealed class File {
         is FSFile -> ioFile.length()
     }
 
-    fun pathRelativeTo(basePath: String) = path.getGetDirectoryFromUri()
-        .substringAfter(basePath.getGetDirectoryFromUri(), "").ifBlank { null }
+    fun pathRelativeTo(basePath: String): String? =
+        if (isDirectory) {
+            path.getGetDirectoryFromUri()
+                .substringAfter(basePath.getGetDirectoryFromUri(), "")
+                .ifBlank { null }
+        } else {
+            parent?.pathRelativeTo(basePath)
+                ?.takeIf { it.isNotEmpty() && name != null }
+                .let {
+                    if (it == null) name
+                    else "${it.removePrefix("/").removeSuffix("/")}/$name"
+                }
+        }
 
     fun listChildren(recurse: Boolean): List<File> {
         if (!isDirectory) return emptyList()
@@ -190,13 +207,11 @@ sealed class File {
     }
 
     fun isIdenticalTo(other: File, context: Context): Boolean {
-        val resolver = context.contentResolver
-
         if (this is FSFile && other is FSFile) {
             return ioFile.readBytes().contentEquals(other.ioFile.readBytes())
         } else if (this is SAFFile && other is SAFFile) {
-            resolver.openInputStream(documentFile.uri).use { src ->
-                resolver.openInputStream(other.documentFile.uri).use { dest ->
+            this.getInputStream(context).use { src ->
+                other.getInputStream(context).use { dest ->
                     if (src == null || dest == null) {
                         Logger.e("Files", "Failed to open file(s)")
                         return false
@@ -207,6 +222,14 @@ sealed class File {
         }
 
         return false
+    }
+
+    fun createFile(name: String, mimeType: String) = when (this) {
+        is SAFFile -> documentFile.createFile(mimeType, name)?.let { SAFFile(it) }
+
+        is FSFile -> IOFile(ioFile, name).let {
+            if (it.createNewFile()) FSFile(it) else null
+        }
     }
 
     fun createDirectory(relativePath: String): File? {
@@ -234,6 +257,18 @@ sealed class File {
                 if (it.exists() || it.mkdirs()) FSFile(it) else null
             }
         }
+    }
+
+    fun getInputStream(context: Context) = when (this) {
+        is SAFFile -> context.contentResolver.openInputStream(documentFile.uri)
+
+        is FSFile -> ioFile.inputStream()
+    }
+
+    fun getOutputStream(context: Context) = when (this) {
+        is SAFFile -> context.contentResolver.openOutputStream(documentFile.uri)
+
+        is FSFile -> ioFile.outputStream()
     }
 
     abstract suspend fun moveTo(

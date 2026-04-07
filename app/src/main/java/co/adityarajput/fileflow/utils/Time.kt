@@ -34,7 +34,7 @@ val ZonedDateTime.isToday get() = toLocalDate() == ZonedDateTime.now().toLocalDa
 
 private val cronParser = CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX))
 
-fun String.getExecutionTimes(count: Int = 1): List<ZonedDateTime>? {
+fun String.getExecutionTimes(count: Int): List<ZonedDateTime>? {
     try {
         val schedule = cronParser.parse(this)
         val executionTime = ExecutionTime.forCron(schedule)

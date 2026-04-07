@@ -12,9 +12,10 @@ import co.adityarajput.fileflow.data.Verb
 import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.views.dullStyle
 import kotlinx.serialization.Serializable
+import java.io.BufferedOutputStream
 import java.nio.file.FileAlreadyExistsException
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 @Suppress("ClassName")
 @Serializable
@@ -35,6 +36,7 @@ sealed class Action {
         get() = when (this) {
             is MOVE -> entries[0]
             is DELETE_STALE -> entries[1]
+            is ZIP -> entries[2]
         }
 
     infix fun isSimilarTo(other: Action) = this::class == other::class
@@ -69,16 +71,15 @@ sealed class Action {
             append(destFileNameTemplate)
         }
 
-        @OptIn(ExperimentalUuidApi::class)
         fun getDestFileName(srcFile: File) =
             srcFile.name!!.replace(
                 Regex(srcFileNamePattern),
-                destFileNameTemplate.replace(
-                    $$"${uuid}",
-                    Uuid.random().toString(),
-                ).replace(
+                destFileNameTemplate.applyCustomReplacements().replace(
                     $$"${folder}",
                     srcFile.parent?.name ?: "",
+                ).replace(
+                    $$"${extension}",
+                    srcFile.extension,
                 ),
             )
 
@@ -218,7 +219,105 @@ sealed class Action {
         }
     }
 
+    @Serializable
+    data class ZIP(
+        override val src: String,
+        override val srcFileNamePattern: String,
+        val dest: String,
+        val destFileNameTemplate: String,
+        override val scanSubdirectories: Boolean = false,
+        val overwriteExisting: Boolean = false,
+        val preserveStructure: Boolean = scanSubdirectories,
+    ) : Action() {
+        override val verb get() = Verb.ZIP
+
+        override val phrase = R.string.zip_phrase
+
+        @Composable
+        override fun getDescription() = buildAnnotatedString {
+            withStyle(dullStyle) { append("from ") }
+            append(src.getGetDirectoryFromUri())
+            if (scanSubdirectories)
+                withStyle(dullStyle) { append(" & subfolders") }
+            withStyle(dullStyle) { append("\nto ") }
+            append(dest.getGetDirectoryFromUri())
+            withStyle(dullStyle) { append("\nas ") }
+            append(destFileNameTemplate)
+        }
+
+        fun getDestFileName() = destFileNameTemplate.applyCustomReplacements()
+
+        override suspend fun execute(
+            context: Context,
+            registerExecution: suspend (String) -> Unit,
+        ) {
+            val destDir = File.fromPath(context, dest)
+            if (destDir == null) {
+                Logger.e("Action", "$dest is invalid")
+                return
+            }
+            val destFileName = getDestFileName()
+
+            destDir.listChildren(false).firstOrNull { it.isFile && it.name == destFileName }?.run {
+                if (!overwriteExisting) {
+                    Logger.e("Action", "$destFileName already exists")
+                    return@execute
+                }
+
+                delete()
+            }
+            val destFile = destDir.createFile(destFileName, "application/zip") ?: run {
+                Logger.e("Action", "Failed to create $destFileName")
+                return@execute
+            }
+
+            val srcFiles = File.fromPath(context, src)
+                ?.listChildren(scanSubdirectories)
+                ?.filter {
+                    it.isFile
+                            && it.name != null
+                            && Regex(srcFileNamePattern).matches(it.name!!)
+                }
+                ?: return
+
+            ZipOutputStream(BufferedOutputStream(destFile.getOutputStream(context))).use { dest ->
+                for (srcFile in srcFiles) {
+                    val srcFileName = srcFile.name ?: continue
+                    Logger.i("Action", "Adding $srcFileName to archive")
+
+                    try {
+                        dest.putNextEntry(
+                            ZipEntry(
+                                if (!preserveStructure) srcFileName
+                                else srcFile.pathRelativeTo(src)!!,
+                            ),
+                        )
+                        srcFile.getInputStream(context).use { src ->
+                            if (src == null) {
+                                Logger.e("Action", "Failed to open $srcFileName")
+                                continue
+                            }
+                            src.copyTo(dest)
+                        }
+                        dest.closeEntry()
+                    } catch (e: Exception) {
+                        Logger.e("Action", "Failed to add $srcFileName to archive", e)
+                        continue
+                    }
+                }
+            }
+
+            registerExecution(destFileName)
+        }
+    }
+
     companion object {
-        val entries by lazy { listOf(MOVE("", "", "", ""), DELETE_STALE("", "")) }
+        val entries by lazy {
+            listOf(
+                MOVE("", "", "", ""),
+                DELETE_STALE("", ""),
+                ZIP("", "", "", ""),
+            )
+        }
     }
 }

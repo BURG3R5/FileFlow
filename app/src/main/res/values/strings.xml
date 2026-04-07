@@ -66,6 +66,7 @@
     <string name="copy">COPY</string>
     <string name="move">MOVE</string>
     <string name="delete_stale">DELETE</string>
+    <string name="zip">ZIP</string>
     <!-- endregion -->
     <!-- endregion -->
 
@@ -117,9 +118,13 @@
     <string name="overwrite_existing">Overwrite existing files in the destination, in case of conflict</string>
     <string name="retention_days">Mark stale if unmodified for</string>
     <string name="days">days</string>
+    <string name="preserve_structure_zip">Recreate source folder-structure in the archive</string>
+    <string name="blank_template_supporting_zip">Template will be used to name the archive</string>
+    <string name="overwrite_existing_zip">Overwrite existing archive in the destination, in case of conflict</string>
     <string name="pattern_advice"><![CDATA[Click <a href=\"https://github.com/BURG3R5/FileFlow/wiki/Examples\">here↗</a> for example patterns and templates.]]></string>
     <string name="invalid_regex">Regex pattern contains errors</string>
     <string name="invalid_template">Regex template contains errors</string>
+    <string name="must_end_in_zip">Archive must have extension \".zip\"</string>
     <string name="pattern_doesnt_match_src_files">"Regex pattern doesn't match any file in the source folder"</string>
     <string name="schedule">Schedule:</string>
     <string name="never">Never</string>
@@ -140,6 +145,7 @@
     <!-- region Action -->
     <string name="move_phrase">Copy or move to another folder</string>
     <string name="delete_stale_phrase">Delete if unmodified for a while</string>
+    <string name="zip_phrase">Create a ZIP archive</string>
     <!-- endregion -->
     <!-- region FolderPickerBottomSheet -->
     <string name="storage_switch">Switch storage</string>

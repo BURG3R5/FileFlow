@@ -254,7 +254,6 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 )
         },
         colors = textFieldColors,
-        singleLine = true,
     )
     when (viewModel.state.values.actionBase) {
         is Action.MOVE -> {
@@ -389,7 +388,6 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                     }
                 },
                 colors = textFieldColors,
-                singleLine = true,
             )
             Row(
                 Modifier.toggleable(viewModel.state.values.overwriteExisting) {
@@ -429,6 +427,94 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 colors = textFieldColors,
             )
         }
+
+        is Action.ZIP -> {
+            Icon(
+                painterResource(R.drawable.arrow_down),
+                stringResource(R.string.arrow_down),
+                Modifier.align(Alignment.CenterHorizontally),
+            )
+            Text(
+                buildAnnotatedString {
+                    append(stringResource(R.string.destination))
+                    withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
+                        append(
+                            viewModel.state.values.dest.getGetDirectoryFromUri()
+                                .ifBlank { stringResource(R.string.select_folder) },
+                        )
+                    }
+                },
+                Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        if (shouldUseCustomPicker) viewModel.folderPickerState =
+                            FolderPickerState.DEST
+                        else destPicker.launch(null)
+                    },
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Normal,
+            )
+            if (viewModel.state.values.scanSubdirectories)
+                Row(
+                    Modifier.toggleable(viewModel.state.values.preserveStructure) {
+                        viewModel.updateForm(
+                            context,
+                            viewModel.state.values.copy(preserveStructure = it),
+                        )
+                    },
+                    Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                    Alignment.CenterVertically,
+                ) {
+                    Checkbox(viewModel.state.values.preserveStructure, null)
+                    Text(
+                        stringResource(R.string.preserve_structure_zip),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Normal,
+                    )
+                }
+            OutlinedTextField(
+                viewModel.state.values.destFileNameTemplate,
+                {
+                    viewModel.updateForm(
+                        context,
+                        viewModel.state.values.copy(destFileNameTemplate = it),
+                    )
+                },
+                Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.file_name_template)) },
+                placeholder = { Text(stringResource(R.string.template_placeholder)) },
+                supportingText = {
+                    if (viewModel.state.values.predictedDestFileNames.isNullOrEmpty()) {
+                        Text(stringResource(R.string.blank_template_supporting_zip))
+                    } else {
+                        Text(
+                            stringResource(
+                                R.string.template_will_yield,
+                                viewModel.state.values.predictedDestFileNames!!.first(),
+                            ),
+                        )
+                    }
+                },
+                colors = textFieldColors,
+            )
+            Row(
+                Modifier.toggleable(viewModel.state.values.overwriteExisting) {
+                    viewModel.updateForm(
+                        context,
+                        viewModel.state.values.copy(overwriteExisting = it),
+                    )
+                },
+                Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                Alignment.CenterVertically,
+            ) {
+                Checkbox(viewModel.state.values.overwriteExisting, null)
+                Text(
+                    stringResource(R.string.overwrite_existing_zip),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Normal,
+                )
+            }
+        }
     }
     Text(
         AnnotatedString.fromHtml(
@@ -445,6 +531,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     )
     if (viewModel.state.error == FormError.INVALID_REGEX) ErrorText(R.string.invalid_regex)
     else if (viewModel.state.error == FormError.INVALID_TEMPLATE) ErrorText(R.string.invalid_template)
+    else if (viewModel.state.error == FormError.MUST_END_IN_ZIP) ErrorText(R.string.must_end_in_zip)
     else if (viewModel.state.warning == FormWarning.NO_MATCHES_IN_SRC) WarningText(R.string.pattern_doesnt_match_src_files)
 }
 

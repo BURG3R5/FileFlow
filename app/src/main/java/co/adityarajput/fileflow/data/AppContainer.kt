@@ -22,7 +22,7 @@ class AppContainer(private val context: Context) {
                     Rule(
                         Action.MOVE(
                             "/storage/emulated/0/AntennaPod",
-                            "AntennaPodBackup-\\d{4}-\\d{2}-\\d{2}.db",
+                            "AntennaPodBackup-\\d{4}-\\d{2}-\\d{2}\\.db",
                             "/storage/emulated/0/Backups",
                             "AntennaPod.db",
                             overwriteExisting = true,
@@ -34,7 +34,7 @@ class AppContainer(private val context: Context) {
                     Rule(
                         Action.MOVE(
                             "/storage/emulated/0/Backups",
-                            "TubularData-\\d{8}_\\d{6}.zip",
+                            "TubularData-\\d{8}_\\d{6}\\.zip",
                             "/storage/emulated/0/Backups",
                             "Tubular.zip",
                             keepOriginal = false,
@@ -46,11 +46,23 @@ class AppContainer(private val context: Context) {
                     Rule(
                         Action.DELETE_STALE(
                             "/storage/emulated/0/Download",
-                            "Alarmetrics_v[\\d\\.]+.apk",
+                            "Alarmetrics_v[\\d\\.]+\\.apk",
                             scanSubdirectories = true,
                         ),
                         enabled = false,
                         interval = 86_400_000,
+                    ),
+                    Rule(
+                        Action.ZIP(
+                            "/storage/emulated/0/Documents/Notes",
+                            "(.*)\\.md",
+                            "/storage/emulated/0/Backups",
+                            "Notes.zip",
+                            true,
+                        ),
+                        executions = 5,
+                        interval = null,
+                        cronString = "30 13 * * *",
                     ),
                 )
                 repository.upsert(
@@ -73,6 +85,11 @@ class AppContainer(private val context: Context) {
                         "AntennaPodBackup-2026-02-02.db",
                         Verb.COPY,
                         System.currentTimeMillis() - 86400000L * 3,
+                    ),
+                    Execution(
+                        "Notes.zip",
+                        Verb.ZIP,
+                        System.currentTimeMillis() - 86400000L * 1,
                     ),
                     Execution(
                         "AntennaPodBackup-2026-02-05.db",
