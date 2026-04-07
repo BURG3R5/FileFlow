@@ -16,6 +16,7 @@ import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
 class UpsertRuleViewModel(
+    context: Context,
     rule: Rule?,
     private val repository: Repository,
 ) : ViewModel() {
@@ -111,6 +112,10 @@ class UpsertRuleViewModel(
     )
 
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
+
+    init {
+        updateForm(context)
+    }
 
     fun updateForm(context: Context, values: Values = state.values, page: FormPage = state.page) {
         var currentSrcFiles: List<File>? = null

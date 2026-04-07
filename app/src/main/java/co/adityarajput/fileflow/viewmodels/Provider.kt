@@ -29,6 +29,7 @@ object Provider {
     fun createURVM(ruleString: String) = viewModelFactory {
         initializer {
             UpsertRuleViewModel(
+                fileFlowApplication(),
                 Json.decodeFromString<Rule?>(ruleString),
                 fileFlowApplication().container.repository,
             )
