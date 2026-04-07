@@ -16,14 +16,15 @@ import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
 class UpsertRuleViewModel(
+    context: Context,
     rule: Rule?,
     private val repository: Repository,
 ) : ViewModel() {
     data class State(
         val page: FormPage = FormPage.ACTION,
         val values: Values = Values(),
-        val error: FormError? = FormError.from(values),
-        val warning: FormWarning? = null,
+        val error: RuleFormError? = RuleFormError.from(values),
+        val warning: RuleFormWarning? = null,
     )
 
     data class Values(
@@ -112,6 +113,10 @@ class UpsertRuleViewModel(
 
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
 
+    init {
+        updateForm(context)
+    }
+
     fun updateForm(context: Context, values: Values = state.values, page: FormPage = state.page) {
         var currentSrcFiles: List<File>? = null
         try {
@@ -124,13 +129,13 @@ class UpsertRuleViewModel(
         }
 
         var predictedDestFileNames: List<String>? = null
-        var warning: FormWarning? = null
+        var warning: RuleFormWarning? = null
         try {
             val regex = Regex(values.srcFileNamePattern)
 
             val matchingSrcFiles = currentSrcFiles
                 ?.filter { regex.matches(it.name!!) }
-                ?.also { if (it.isEmpty()) warning = FormWarning.NO_MATCHES_IN_SRC }
+                ?.also { if (it.isEmpty()) warning = RuleFormWarning.NO_MATCHES_IN_SRC }
 
             if (values.destFileNameTemplate.isNotBlank()) {
                 if (matchingSrcFiles != null && values.actionBase is Action.MOVE) {
@@ -155,7 +160,7 @@ class UpsertRuleViewModel(
     }
 
     suspend fun submitForm(context: Context) {
-        if (FormError.from(state.values) == null) {
+        if (RuleFormError.from(state.values) == null) {
             val rule = state.values.toRule()
             Logger.d(
                 "UpsertRuleViewModel",
@@ -179,12 +184,12 @@ enum class FormPage {
     fun previous() = entries[ordinal - 1]
 }
 
-enum class FormError {
+enum class RuleFormError {
     BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE, MUST_END_IN_ZIP,
     INTERVAL_TOO_SHORT, INTERVAL_TOO_LONG, INVALID_CRON_STRING, CRON_TOO_FREQUENT;
 
     companion object {
-        fun from(values: UpsertRuleViewModel.Values): FormError? {
+        fun from(values: UpsertRuleViewModel.Values): RuleFormError? {
             try {
                 if (values.src.isBlank() || values.srcFileNamePattern.isBlank())
                     return BLANK_FIELDS
@@ -232,4 +237,4 @@ enum class FormError {
     }
 }
 
-enum class FormWarning { NO_MATCHES_IN_SRC }
+enum class RuleFormWarning { NO_MATCHES_IN_SRC }

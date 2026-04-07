@@ -12,6 +12,7 @@ class AppContainer(private val context: Context) {
         Repository(
             FileFlowDatabase.getDatabase(context).ruleDao(),
             FileFlowDatabase.getDatabase(context).executionDao(),
+            FileFlowDatabase.getDatabase(context).groupDao(),
         )
     }
 

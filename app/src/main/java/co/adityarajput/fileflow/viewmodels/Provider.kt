@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import co.adityarajput.fileflow.Constants.SETTINGS
 import co.adityarajput.fileflow.FileFlowApplication
+import co.adityarajput.fileflow.data.models.Group
 import co.adityarajput.fileflow.data.models.Rule
 import kotlinx.serialization.json.Json
 
@@ -22,12 +23,23 @@ object Provider {
         }
         initializer { RulesViewModel(fileFlowApplication().container.repository) }
         initializer { ExecutionsViewModel(fileFlowApplication().container.repository) }
+        initializer { GroupsViewModel(fileFlowApplication().container.repository) }
     }
 
     fun createURVM(ruleString: String) = viewModelFactory {
         initializer {
             UpsertRuleViewModel(
+                fileFlowApplication(),
                 Json.decodeFromString<Rule?>(ruleString),
+                fileFlowApplication().container.repository,
+            )
+        }
+    }
+
+    fun createUGVM(groupString: String) = viewModelFactory {
+        initializer {
+            UpsertGroupViewModel(
+                Json.decodeFromString<Group?>(groupString),
                 fileFlowApplication().container.repository,
             )
         }

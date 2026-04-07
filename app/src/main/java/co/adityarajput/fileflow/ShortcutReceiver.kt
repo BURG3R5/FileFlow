@@ -10,19 +10,24 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class AlarmReceiver : BroadcastReceiver() {
+class ShortcutReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        Logger.d("AlarmReceiver", "Received intent with action: ${intent.action}")
+        Logger.d("ShortcutReceiver", "Received intent with action: ${intent.action}")
 
-        if (intent.action == Constants.ACTION_EXECUTE_RULE) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val repository = AppContainer(context).repository
-                val rule = repository.rule(intent.getIntExtra(Constants.EXTRA_RULE_ID, -1))
+        if (intent.action != Constants.ACTION_EXECUTE_GROUP)
+            return
 
-                if (rule == null || !rule.enabled)
-                    return@launch
+        CoroutineScope(Dispatchers.IO).launch {
+            val repository = AppContainer(context).repository
+            val groupId = intent.getIntExtra(Constants.EXTRA_GROUP_ID, -1)
+            val (group, rules) = repository.group(groupId)
 
-                Logger.d("AlarmReceiver", "Executing $rule")
+            if (group == null)
+                return@launch
+
+            Logger.d("ShortcutReceiver", "Executing $group")
+            for (rule in rules) {
+                Logger.d("ShortcutReceiver", "Executing $rule")
                 rule.action.execute(context) {
                     repository.registerExecution(
                         rule,

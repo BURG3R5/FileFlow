@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="rule">
+        <item quantity="one">%1$d rule</item>
+        <item quantity="other">%1$d rules</item>
+    </plurals>
     <plurals name="execution">
         <item quantity="one">%1$d execution</item>
         <item quantity="other">%1$d executions</item>

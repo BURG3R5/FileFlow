@@ -17,8 +17,8 @@ import co.adityarajput.fileflow.R
 @Composable
 fun Tile(
     title: String,
-    leading: String,
-    trailing: String,
+    leading: String? = null,
+    trailing: String? = null,
     content: @Composable (() -> Unit) = { },
     onClick: () -> Unit = {},
     buttons: @Composable RowScope.() -> Unit = {},
@@ -42,26 +42,29 @@ fun Tile(
                 .padding(dimensionResource(R.dimen.padding_large)),
             Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
         ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                Arrangement.SpaceBetween,
-                Alignment.CenterVertically,
-            ) {
-                Text(
-                    leading,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                        11.sp,
-                    ),
-                )
-                Text(
-                    trailing,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                        8.sp,
-                    ),
-                )
-            }
+            if (leading != null || trailing != null)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    Arrangement.SpaceBetween,
+                    Alignment.CenterVertically,
+                ) {
+                    if (leading != null)
+                        Text(
+                            leading,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                                11.sp,
+                            ),
+                        )
+                    if (trailing != null)
+                        Text(
+                            trailing,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                                8.sp,
+                            ),
+                        )
+                }
             Text(
                 title,
                 style = MaterialTheme.typography.titleSmall,

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">FileFlow</string>
     <string name="app_name_launcher" translatable="false">FileFlow</string>
-    <string name="app_version" translatable="false">1.4.0</string>
+    <string name="app_version" translatable="false">1.5.0</string>
 
     <!-- region AboutScreen -->
     <string name="about">About</string>
@@ -22,6 +22,18 @@
     <!-- region String -->
     <string name="many_days">"1k+ days"</string>
     <string name="just_now">just now</string>
+    <!-- endregion -->
+    <!-- endregion -->
+
+    <!-- region GroupsScreen -->
+    <string name="groups">Groups</string>
+    <string name="no_groups">"Groups are collections of rules executable via 'shortcuts'.\n\nTap and hold FileFlow's app icon on your device's Apps Screen to access the shortcuts.\n\nNo groups currently added.\nTap + to get started."</string>
+    <string name="shortcuts_limited">Only the first %1$d app shortcuts are visible in the launcher. Please delete existing groups first.</string>
+    <string name="add_group">Add group</string>
+    <string name="edit_group">Edit group</string>
+    <!-- region DeleteGroupDialog -->
+    <string name="delete_group">Delete group</string>
+    <string name="delete_group_confirmation">Deletion is permanent; your group will be lost. Included rules will not be affected.</string>
     <!-- endregion -->
     <!-- endregion -->
 
@@ -82,12 +94,27 @@
     <string name="light">Light</string>
     <string name="system">System</string>
     <string name="dark">Dark</string>
+    <string name="manage_groups">Manage groups</string>
     <string name="copy_success">Logs copied to clipboard</string>
     <string name="logs">Logs</string>
     <string name="copy_logs">Copy logs</string>
     <string name="view_licenses">View licenses</string>
     <string name="info">Info</string>
     <string name="about_app">About FileFlow</string>
+    <!-- endregion -->
+
+    <!-- region Shortcuts -->
+    <string name="group_edited_or_deleted">Group linked to this shortcut was edited/deleted.</string>
+    <!-- endregion -->
+
+    <!-- region UpsertGroupScreen -->
+    <string name="group_name">Group name</string>
+    <string name="group_name_placeholder">Enter a name for the group</string>
+    <string name="rules_to_include">Rules to include:</string>
+    <string name="all_rules">All rules, current and future</string>
+    <string name="some_rules">Some rules</string>
+    <string name="no_rules_while_grouping">No rules added.\nPlease create some rules first.</string>
+    <string name="added_to_group">Added to group</string>
     <!-- endregion -->
 
     <!-- region UpsertRuleScreen -->

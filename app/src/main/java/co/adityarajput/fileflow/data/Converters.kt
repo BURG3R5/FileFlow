@@ -25,4 +25,10 @@ class Converters {
             Action.entries[0]
         }
     }
+
+    @TypeConverter
+    fun fromIntList(list: List<Int>) = list.joinToString(",")
+
+    @TypeConverter
+    fun toIntList(value: String) = value.split(",").mapNotNull { it.toIntOrNull() }
 }

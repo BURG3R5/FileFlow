@@ -529,10 +529,10 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Normal,
     )
-    if (viewModel.state.error == FormError.INVALID_REGEX) ErrorText(R.string.invalid_regex)
-    else if (viewModel.state.error == FormError.INVALID_TEMPLATE) ErrorText(R.string.invalid_template)
-    else if (viewModel.state.error == FormError.MUST_END_IN_ZIP) ErrorText(R.string.must_end_in_zip)
-    else if (viewModel.state.warning == FormWarning.NO_MATCHES_IN_SRC) WarningText(R.string.pattern_doesnt_match_src_files)
+    if (viewModel.state.error == RuleFormError.INVALID_REGEX) ErrorText(R.string.invalid_regex)
+    else if (viewModel.state.error == RuleFormError.INVALID_TEMPLATE) ErrorText(R.string.invalid_template)
+    else if (viewModel.state.error == RuleFormError.MUST_END_IN_ZIP) ErrorText(R.string.must_end_in_zip)
+    else if (viewModel.state.warning == RuleFormWarning.NO_MATCHES_IN_SRC) WarningText(R.string.pattern_doesnt_match_src_files)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -669,8 +669,8 @@ private fun SchedulePage(viewModel: UpsertRuleViewModel) {
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Normal,
             )
-            if (viewModel.state.error == FormError.INTERVAL_TOO_SHORT) ErrorText(R.string.interval_too_short)
-            else if (viewModel.state.error == FormError.INTERVAL_TOO_LONG) ErrorText(R.string.interval_too_long)
+            if (viewModel.state.error == RuleFormError.INTERVAL_TOO_SHORT) ErrorText(R.string.interval_too_short)
+            else if (viewModel.state.error == RuleFormError.INTERVAL_TOO_LONG) ErrorText(R.string.interval_too_long)
         }
     }
     // endregion
@@ -782,8 +782,8 @@ private fun SchedulePage(viewModel: UpsertRuleViewModel) {
                     )
                 }
             }
-            if (viewModel.state.error == FormError.INVALID_CRON_STRING) ErrorText(R.string.invalid_cron_string)
-            else if (viewModel.state.error == FormError.CRON_TOO_FREQUENT) ErrorText(R.string.cron_too_frequent)
+            if (viewModel.state.error == RuleFormError.INVALID_CRON_STRING) ErrorText(R.string.invalid_cron_string)
+            else if (viewModel.state.error == RuleFormError.CRON_TOO_FREQUENT) ErrorText(R.string.cron_too_frequent)
         }
     }
     // endregion
