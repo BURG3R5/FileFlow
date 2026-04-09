@@ -63,7 +63,7 @@ fun ExecutionsScreen(
                 items(state.value.executions!!, { it.id }) {
                     Tile(
                         it.fileName,
-                        stringResource(it.verb.resource),
+                        stringResource(it.verb.forExecutions),
                         stringResource(
                             R.string.ago,
                             (System.currentTimeMillis() - it.timestamp).toShortHumanReadableTime(),

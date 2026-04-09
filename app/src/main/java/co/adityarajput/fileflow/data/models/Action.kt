@@ -1,17 +1,19 @@
 package co.adityarajput.fileflow.data.models
 
 import android.content.Context
-import androidx.compose.material3.MaterialTheme
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import co.adityarajput.fileflow.Constants
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.data.Verb
 import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.views.dullStyle
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import java.io.BufferedOutputStream
 import java.nio.file.FileAlreadyExistsException
 import java.util.zip.ZipEntry
@@ -37,6 +39,7 @@ sealed class Action {
             is MOVE -> entries[0]
             is DELETE_STALE -> entries[1]
             is ZIP -> entries[2]
+            is EMIT_CHANGES -> entries[3]
         }
 
     infix fun isSimilarTo(other: Action) = this::class == other::class
@@ -175,7 +178,6 @@ sealed class Action {
 
         @Composable
         override fun getDescription() = buildAnnotatedString {
-            val dullStyle = SpanStyle(MaterialTheme.colorScheme.onSurfaceVariant)
 
             withStyle(dullStyle) { append("in ") }
             append(src.getGetDirectoryFromUri())
@@ -311,12 +313,94 @@ sealed class Action {
         }
     }
 
+    @Serializable
+    data class EMIT_CHANGES(
+        override val src: String,
+        override val srcFileNamePattern: String,
+        val intent: String,
+        val packageName: String,
+        val extras: String = "{}",
+        override val scanSubdirectories: Boolean = false,
+        val modifiedWithin: Long = Constants.ONE_HOUR_IN_MILLIS,
+    ) : Action() {
+        override val verb get() = Verb.EMIT_CHANGES
+
+        override val phrase = R.string.emit_changes_phrase
+
+        @Composable
+        override fun getDescription() = buildAnnotatedString {
+            withStyle(dullStyle) { append("in ") }
+            append(src.getGetDirectoryFromUri())
+            if (scanSubdirectories)
+                withStyle(dullStyle) { append(" & subfolders") }
+            withStyle(dullStyle) { append("\nemit ") }
+            append(intent)
+            if (!intent.contains(packageName)) {
+                withStyle(dullStyle) { append("\nto ") }
+                append(packageName)
+            }
+            if (extras.isNotBlank() && extras != "{}") {
+                withStyle(dullStyle) { append("\nwith ") }
+                append(extras)
+            }
+            withStyle(dullStyle) { append("\nif modified within ") }
+            append(modifiedWithin.toAccurateHumanReadableTime())
+        }
+
+        override suspend fun execute(
+            context: Context,
+            registerExecution: suspend (String) -> Unit,
+        ) {
+            val srcFiles = File.fromPath(context, src)
+                ?.listChildren(scanSubdirectories)
+                ?.filter {
+                    it.isFile
+                            && it.name != null
+                            && Regex(srcFileNamePattern).matches(it.name!!)
+                }
+                ?.filter { System.currentTimeMillis() - it.lastModified() <= modifiedWithin }
+                ?: return
+
+            if (srcFiles.isEmpty()) {
+                Logger.d("Action", "No files modified recently")
+                return
+            }
+
+            Logger.i("Action", "Emitting $intent to $packageName with $extras")
+            try {
+                context.sendBroadcast(
+                    Intent(intent).apply {
+                        setPackage(this@EMIT_CHANGES.packageName)
+                        Json.parseToJsonElement(this@EMIT_CHANGES.extras.ifBlank { "{}" }).jsonObject.forEach { (key, value) ->
+                            try {
+                                putExtra(key, value.toSerializable())
+                            } catch (e: Exception) {
+                                Logger.e(
+                                    "Action",
+                                    "Failed to put extra $key with value $value of type ${value::class.java}",
+                                    e,
+                                )
+                                return
+                            }
+                        }
+                    },
+                )
+            } catch (e: Exception) {
+                Logger.e("Action", "Failed to emit $intent", e)
+                return
+            }
+
+            registerExecution(intent)
+        }
+    }
+
     companion object {
         val entries by lazy {
             listOf(
                 MOVE("", "", "", ""),
                 DELETE_STALE("", ""),
                 ZIP("", "", "", ""),
+                EMIT_CHANGES("", "", "", ""),
             )
         }
     }

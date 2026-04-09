@@ -65,6 +65,19 @@ class AppContainer(private val context: Context) {
                         interval = null,
                         cronString = "30 13 * * *",
                     ),
+                    Rule(
+                        Action.EMIT_CHANGES(
+                            "/storage/emulated/0/Movies",
+                            ".*\\.mp4",
+                            "org.amoradi.syncopoli.SYNC_PROFILE",
+                            "org.amoradi.syncopoli",
+                            """{"profile_name": "Movies Backup"}""",
+                            true,
+                            3_600_000L * 3,
+                        ),
+                        executions = 7,
+                        interval = 3_600_000L * 3,
+                    ),
                 )
                 repository.upsert(
                     Execution(
