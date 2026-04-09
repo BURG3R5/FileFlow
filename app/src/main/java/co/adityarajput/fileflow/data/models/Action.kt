@@ -2,6 +2,7 @@ package co.adityarajput.fileflow.data.models
 
 import android.content.Context
 import android.content.Intent
+import android.media.MediaScannerConnection
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
@@ -108,6 +109,8 @@ sealed class Action {
                         listOf(it.maxByOrNull(superlative.selector) ?: return)
                 } ?: return
 
+            val destPaths = mutableListOf<String?>()
+
             for (srcFile in srcFiles) {
                 val srcFileName = srcFile.name ?: continue
                 val destFileName = getDestFileName(srcFile)
@@ -143,12 +146,14 @@ sealed class Action {
                         "Action",
                         "Moving $srcFileName to ${destSubDir.path}/$destFileName",
                     )
-                    srcFile.moveTo(
-                        destSubDir,
-                        destFileName,
-                        keepOriginal,
-                        overwriteExisting,
-                        context,
+                    destPaths.add(
+                        srcFile.moveTo(
+                            destSubDir,
+                            destFileName,
+                            keepOriginal,
+                            overwriteExisting,
+                            context,
+                        ),
                     )
                 } catch (e: FileAlreadyExistsException) {
                     Logger.e("Action", "$destFileName already exists", e)
@@ -159,6 +164,14 @@ sealed class Action {
                 }
 
                 registerExecution(srcFileName)
+            }
+
+            MediaScannerConnection.scanFile(
+                context,
+                destPaths.filterNotNull().distinct().toTypedArray(),
+                null,
+            ) { path, _ ->
+                Logger.d("Action", "Scanned media at $path")
             }
         }
     }
