@@ -43,7 +43,7 @@ sealed class File {
             keepOriginal: Boolean,
             overwriteExisting: Boolean,
             context: Context,
-        ) {
+        ): String? {
             if (destDir !is SAFFile)
                 throw IllegalArgumentException("Destination directory must be a SAFFile")
 
@@ -63,6 +63,8 @@ sealed class File {
             }
 
             if (!keepOriginal) delete()
+
+            return null
         }
     }
 
@@ -73,16 +75,18 @@ sealed class File {
             keepOriginal: Boolean,
             overwriteExisting: Boolean,
             context: Context,
-        ) {
+        ): String? {
             if (destDir !is FSFile)
                 throw IllegalArgumentException("Destination directory must be a FSFile")
 
             val options = mutableListOf<StandardCopyOption>()
             if (keepOriginal) options.add(StandardCopyOption.COPY_ATTRIBUTES)
             if (overwriteExisting) options.add(StandardCopyOption.REPLACE_EXISTING)
+            var destFilePath: String? = null
 
             try {
                 withContext(Dispatchers.IO) {
+                    destFilePath = destDir.ioFile.toPath().resolve(destFileName).toString()
                     if (keepOriginal) {
                         Files.copy(
                             this@FSFile.ioFile.toPath(),
@@ -106,9 +110,11 @@ sealed class File {
                     e,
                 )
 
-                val destFile = IOFile(destDir.ioFile, destFileName)
                 withContext(Dispatchers.IO) {
+                    val destFile = IOFile(destDir.ioFile, destFileName)
+
                     destFile.createNewFile()
+                    destFilePath = destFile.absolutePath
 
                     this@FSFile.ioFile.inputStream().use { srcStream ->
                         destFile.outputStream().use { destStream ->
@@ -119,6 +125,8 @@ sealed class File {
 
                 if (!keepOriginal) delete()
             }
+
+            return destFilePath
         }
     }
 
@@ -277,7 +285,7 @@ sealed class File {
         keepOriginal: Boolean,
         overwriteExisting: Boolean,
         context: Context,
-    )
+    ): String?
 
     fun delete() = when (this) {
         is SAFFile -> documentFile.delete()

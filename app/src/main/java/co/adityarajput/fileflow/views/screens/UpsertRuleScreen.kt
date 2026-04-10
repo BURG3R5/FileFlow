@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -149,6 +150,7 @@ fun UpsertRuleScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     val context = LocalContext.current
@@ -515,6 +517,103 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 )
             }
         }
+
+        is Action.EMIT_CHANGES -> {
+            var unit by remember { mutableStateOf(TimeUnit.MINUTES) }
+            var dropdownExpanded by remember { mutableStateOf(false) }
+            val displayValue = (viewModel.state.values.modifiedWithin / unit.inMillis).toInt()
+            OutlinedTextField(
+                displayValue.toString(),
+                {
+                    viewModel.updateForm(
+                        context,
+                        viewModel.state.values.copy(
+                            modifiedWithin = (it.toIntOrNull() ?: 0) * unit.inMillis,
+                        ),
+                    )
+                },
+                Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.modified_within)) },
+                trailingIcon = {
+                    ExposedDropdownMenuBox(
+                        dropdownExpanded,
+                        { dropdownExpanded = !dropdownExpanded },
+                    ) {
+                        Row(
+                            Modifier.clickable { dropdownExpanded = true },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                unit.text(displayValue),
+                                Modifier.padding(start = dimensionResource(R.dimen.padding_medium)),
+                            )
+                            IconButton({ dropdownExpanded = true }) {
+                                Icon(
+                                    painterResource(R.drawable.arrow_drop_down),
+                                    stringResource(R.string.arrow_down),
+                                )
+                            }
+                        }
+                        ExposedDropdownMenu(dropdownExpanded, { dropdownExpanded = false }) {
+                            listOf(TimeUnit.MINUTES, TimeUnit.HOURS, TimeUnit.DAYS).forEach {
+                                DropdownMenuItem(
+                                    { Text(it.text(displayValue)) },
+                                    {
+                                        unit = it
+                                        dropdownExpanded = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                colors = textFieldColors,
+            )
+            Icon(
+                painterResource(R.drawable.wifi),
+                stringResource(R.string.upside_down_wifi),
+                Modifier
+                    .rotate(90f)
+                    .align(Alignment.CenterHorizontally),
+            )
+            OutlinedTextField(
+                viewModel.state.values.intent,
+                {
+                    viewModel.updateForm(
+                        context,
+                        viewModel.state.values.copy(intent = it),
+                    )
+                },
+                Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.intent)) },
+                placeholder = { Text(stringResource(R.string.intent_placeholder)) },
+                colors = textFieldColors,
+            )
+            OutlinedTextField(
+                viewModel.state.values.packageName,
+                {
+                    viewModel.updateForm(
+                        context,
+                        viewModel.state.values.copy(packageName = it),
+                    )
+                },
+                Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.package_name)) },
+                placeholder = { Text(stringResource(R.string.pattern_placeholder)) },
+                colors = textFieldColors,
+            )
+            OutlinedTextField(
+                viewModel.state.values.extras,
+                { viewModel.updateForm(context, viewModel.state.values.copy(extras = it)) },
+                Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.extras)) },
+                placeholder = { Text(stringResource(R.string.extras_placeholder)) },
+                supportingText = { Text(stringResource(R.string.extras_supporting)) },
+                colors = textFieldColors,
+            )
+        }
     }
     Text(
         AnnotatedString.fromHtml(
@@ -532,6 +631,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     if (viewModel.state.error == RuleFormError.INVALID_REGEX) ErrorText(R.string.invalid_regex)
     else if (viewModel.state.error == RuleFormError.INVALID_TEMPLATE) ErrorText(R.string.invalid_template)
     else if (viewModel.state.error == RuleFormError.MUST_END_IN_ZIP) ErrorText(R.string.must_end_in_zip)
+    else if (viewModel.state.error == RuleFormError.INVALID_JSON) ErrorText(R.string.invalid_json)
     else if (viewModel.state.warning == RuleFormWarning.NO_MATCHES_IN_SRC) WarningText(R.string.pattern_doesnt_match_src_files)
 }
 
@@ -605,17 +705,14 @@ private fun SchedulePage(viewModel: UpsertRuleViewModel) {
             Modifier.fillMaxWidth(),
             Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium)),
         ) {
-            val displayValue =
-                ((viewModel.state.values.interval
-                    ?: Constants.ONE_HOUR_IN_MILLIS) / unit.inMillis).toInt()
+            val displayValue = ((viewModel.state.values.interval ?: 0) / unit.inMillis).toInt()
             OutlinedTextField(
                 displayValue.toString(),
                 {
                     viewModel.updateForm(
                         context,
                         viewModel.state.values.copy(
-                            interval = it.toIntOrNull()?.times(unit.inMillis)
-                                ?: Constants.ONE_HOUR_IN_MILLIS,
+                            interval = (it.toIntOrNull() ?: 0) * unit.inMillis,
                         ),
                     )
                 },

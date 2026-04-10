@@ -145,7 +145,7 @@ fun UpsertGroupScreen(
                             items(rules, { it.id }) {
                                 Tile(
                                     it.action.srcFileNamePattern,
-                                    stringResource(it.action.verb.resource),
+                                    stringResource(it.action.verb.forRules),
                                     null,
                                     {
                                         Text(

@@ -12,6 +12,8 @@ import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.Rule
 import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.views.components.FolderPickerState
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
@@ -45,6 +47,10 @@ class UpsertRuleViewModel(
         val interval: Long? = Constants.ONE_HOUR_IN_MILLIS,
         val cronString: String? = null,
         val predictedExecutionTimes: List<ZonedDateTime>? = null,
+        val intent: String = "",
+        val packageName: String = "",
+        val extras: String = "{}",
+        val modifiedWithin: Long = Constants.ONE_HOUR_IN_MILLIS,
     ) {
         companion object {
             fun from(rule: Rule) = when (rule.action) {
@@ -79,6 +85,18 @@ class UpsertRuleViewModel(
                     interval = rule.interval,
                     cronString = rule.cronString,
                 )
+
+                is Action.EMIT_CHANGES -> Values(
+                    rule.id, rule.action.base, rule.action.src,
+                    rule.action.srcFileNamePattern,
+                    scanSubdirectories = rule.action.scanSubdirectories,
+                    interval = rule.interval,
+                    cronString = rule.cronString,
+                    intent = rule.action.intent,
+                    packageName = rule.action.packageName,
+                    extras = rule.action.extras,
+                    modifiedWithin = rule.action.modifiedWithin,
+                )
             }
         }
 
@@ -98,6 +116,12 @@ class UpsertRuleViewModel(
                     Action.ZIP(
                         src, srcFileNamePattern, dest, destFileNameTemplate,
                         scanSubdirectories, overwriteExisting, preserveStructure,
+                    )
+
+                is Action.EMIT_CHANGES ->
+                    Action.EMIT_CHANGES(
+                        src, srcFileNamePattern, intent, packageName, extras, scanSubdirectories,
+                        modifiedWithin,
                     )
             },
             interval = interval,
@@ -185,25 +209,30 @@ enum class FormPage {
 }
 
 enum class RuleFormError {
-    BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE, MUST_END_IN_ZIP,
+    BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE, MUST_END_IN_ZIP, INVALID_JSON,
     INTERVAL_TOO_SHORT, INTERVAL_TOO_LONG, INVALID_CRON_STRING, CRON_TOO_FREQUENT;
 
     companion object {
         fun from(values: UpsertRuleViewModel.Values): RuleFormError? {
-            try {
-                if (values.src.isBlank() || values.srcFileNamePattern.isBlank())
-                    return BLANK_FIELDS
+            if (values.src.isBlank() || values.srcFileNamePattern.isBlank())
+                return BLANK_FIELDS
 
+            try {
                 if (Regex(values.srcFileNamePattern).pattern != values.srcFileNamePattern)
                     return INVALID_REGEX
+            } catch (_: Exception) {
+                return INVALID_REGEX
+            }
 
-                if (values.actionBase is Action.MOVE) {
+            when (values.actionBase) {
+                is Action.MOVE -> {
                     if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
                         return BLANK_FIELDS
                     if (values.predictedDestFileNames == null)
                         return INVALID_TEMPLATE
                 }
-                if (values.actionBase is Action.ZIP) {
+
+                is Action.ZIP -> {
                     if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
                         return BLANK_FIELDS
                     if (values.predictedDestFileNames?.size != 1)
@@ -211,10 +240,21 @@ enum class RuleFormError {
                     if (!Regex("^.+\\.(zip|ZIP)$").matches(values.predictedDestFileNames.first()))
                         return MUST_END_IN_ZIP
                 }
-            } catch (_: Exception) {
-                Logger.d("UpsertRuleViewModel", "Invalid regex")
-                return INVALID_REGEX
+
+                is Action.EMIT_CHANGES -> {
+                    if (values.intent.isBlank() || values.packageName.isBlank())
+                        return BLANK_FIELDS
+                    try {
+                        if (Json.parseToJsonElement(values.extras.ifBlank { "{}" }) !is JsonObject)
+                            return INVALID_JSON
+                    } catch (_: Exception) {
+                        return INVALID_JSON
+                    }
+                }
+
+                else -> {}
             }
+
 
             if (values.interval != null) {
                 if (values.interval < PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS)

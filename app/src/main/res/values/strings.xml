@@ -19,6 +19,9 @@
     <string name="history">History</string>
     <string name="no_executions">No executions yet.</string>
     <string name="ago">%1$s ago</string>
+    <!-- region Action -->
+    <string name="emit">EMIT</string>
+    <!-- endregion -->
     <!-- region String -->
     <string name="many_days">"1k+ days"</string>
     <string name="just_now">just now</string>
@@ -79,6 +82,7 @@
     <string name="move">MOVE</string>
     <string name="delete_stale">DELETE</string>
     <string name="zip">ZIP</string>
+    <string name="watch">WATCH</string>
     <!-- endregion -->
     <!-- endregion -->
 
@@ -148,10 +152,20 @@
     <string name="preserve_structure_zip">Recreate source folder-structure in the archive</string>
     <string name="blank_template_supporting_zip">Template will be used to name the archive</string>
     <string name="overwrite_existing_zip">Overwrite existing archive in the destination, in case of conflict</string>
+    <string name="upside_down_wifi">A Wi-Fi symbol, rotated 90 degrees. It is meant to represent an emission.</string>
+    <string name="intent">Intent</string>
+    <string name="intent_placeholder">com.example.app.ACTION</string>
+    <string name="package_name">Package</string>
+    <string name="package_placeholder">com.example.app</string>
+    <string name="extras">Extras</string>
+    <string name="extras_placeholder">{\"key\": \"value\"}</string>
+    <string name="extras_supporting">Extras must be in JSON-string format</string>
+    <string name="modified_within">Modified within</string>
     <string name="pattern_advice"><![CDATA[Click <a href=\"https://github.com/BURG3R5/FileFlow/wiki/Examples\">here↗</a> for example patterns and templates.]]></string>
     <string name="invalid_regex">Regex pattern contains errors</string>
     <string name="invalid_template">Regex template contains errors</string>
     <string name="must_end_in_zip">Archive must have extension \".zip\"</string>
+    <string name="invalid_json">JSON contains errors</string>
     <string name="pattern_doesnt_match_src_files">"Regex pattern doesn't match any file in the source folder"</string>
     <string name="schedule">Schedule:</string>
     <string name="never">Never</string>
@@ -173,6 +187,7 @@
     <string name="move_phrase">Copy or move to another folder</string>
     <string name="delete_stale_phrase">Delete if unmodified for a while</string>
     <string name="zip_phrase">Create a ZIP archive</string>
+    <string name="emit_changes_phrase">Emit an intent if recently modified</string>
     <!-- endregion -->
     <!-- region FolderPickerBottomSheet -->
     <string name="storage_switch">Switch storage</string>
