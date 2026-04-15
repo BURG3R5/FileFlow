@@ -15,6 +15,17 @@
     <!-- endregion -->
     <!-- endregion -->
 
+    <!-- region CreateServerScreen -->
+    <string name="host">Host</string>
+    <string name="port">Port</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="private_key">Private key</string>
+    <!-- region CreateServerViewModel.Error -->
+    <string name="cannot_connect">"Couldn't connect to the server"</string>
+    <!-- endregion -->
+    <!-- endregion -->
+
     <!-- region ExecutionsScreen -->
     <string name="history">History</string>
     <string name="no_executions">No executions yet.</string>
@@ -86,6 +97,15 @@
     <!-- endregion -->
     <!-- endregion -->
 
+    <!-- region ServersScreen -->
+    <string name="no_servers">"No servers currently added.\nTap + to get started."</string>
+    <string name="add_server">Add server</string>
+    <!-- region DeleteServerDialog -->
+    <string name="delete_server">Delete server</string>
+    <string name="delete_server_confirmation">Deletion is permanent; your data and credentials will be lost. However, rules that currently use this server will continue to use these credentials.</string>
+    <!-- endregion -->
+    <!-- endregion -->
+
     <!-- region SettingsScreen -->
     <string name="settings">Settings</string>
     <string name="settings_section_1">Optional Enhancements</string>
@@ -99,6 +119,8 @@
     <string name="system">System</string>
     <string name="dark">Dark</string>
     <string name="manage_groups">Manage groups</string>
+    <string name="servers">Servers</string>
+    <string name="manage_servers">Manage servers</string>
     <string name="copy_success">Logs copied to clipboard</string>
     <string name="logs">Logs</string>
     <string name="copy_logs">Copy logs</string>
@@ -128,7 +150,11 @@
     <string name="save">Save</string>
     <string name="next">Next</string>
     <string name="action">Action:</string>
+    <string name="enable_remote">Enable remote capabilities for this rule?</string>
+    <string name="source_device">"Source device: "</string>
+    <string name="this_device">this device</string>
     <string name="source">"Source: "</string>
+    <string name="source_folder">Source folder</string>
     <string name="select_folder">select folder</string>
     <string name="scan_subdirectories">Scan subfolders</string>
     <string name="file_name_pattern">File name pattern</string>
@@ -139,6 +165,8 @@
     <string name="delete_original">Delete original files from the source after execution</string>
     <string name="choose_superlative">"In case of multiple matches, choose: "</string>
     <string name="arrow_down">An arrow pointing downward</string>
+    <string name="destination_device">"Destination device: "</string>
+    <string name="destination_folder">Destination folder</string>
     <string name="destination">"Destination: "</string>
     <string name="preserve_structure">Recreate source folder-structure in destination</string>
     <string name="file_name_template">File name template</string>
@@ -166,6 +194,7 @@
     <string name="invalid_template">Regex template contains errors</string>
     <string name="must_end_in_zip">Archive must have extension \".zip\"</string>
     <string name="invalid_json">JSON contains errors</string>
+    <string name="remote_action_without_servers">"Remote capabilities are enabled but servers aren't utilized"</string>
     <string name="pattern_doesnt_match_src_files">"Regex pattern doesn't match any file in the source folder"</string>
     <string name="schedule">Schedule:</string>
     <string name="never">Never</string>

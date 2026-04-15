@@ -9,6 +9,8 @@ import co.adityarajput.fileflow.Constants.SETTINGS
 import co.adityarajput.fileflow.FileFlowApplication
 import co.adityarajput.fileflow.data.models.Group
 import co.adityarajput.fileflow.data.models.Rule
+import co.adityarajput.fileflow.viewmodels.servers.CreateServerViewModel
+import co.adityarajput.fileflow.viewmodels.servers.ServersViewModel
 import kotlinx.serialization.json.Json
 
 object Provider {
@@ -24,6 +26,8 @@ object Provider {
         initializer { RulesViewModel(fileFlowApplication().container.repository) }
         initializer { ExecutionsViewModel(fileFlowApplication().container.repository) }
         initializer { GroupsViewModel(fileFlowApplication().container.repository) }
+        initializer { ServersViewModel(fileFlowApplication().container.repository) }
+        initializer { CreateServerViewModel(fileFlowApplication().container.repository) }
     }
 
     fun createURVM(ruleString: String) = viewModelFactory {

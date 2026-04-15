@@ -41,7 +41,27 @@ sealed class Action {
             is DELETE_STALE -> entries[1]
             is ZIP -> entries[2]
             is EMIT_CHANGES -> entries[3]
+
+            is RemoteAction.MOVE -> RemoteAction.entries[0]
+            is RemoteAction.DELETE_STALE -> RemoteAction.entries[1]
+            is RemoteAction.ZIP -> RemoteAction.entries[2]
+            is RemoteAction.EMIT_CHANGES -> RemoteAction.entries[3]
         }
+
+    val counterBase: Action
+        get() = when (this) {
+            is MOVE -> RemoteAction.entries[0]
+            is DELETE_STALE -> RemoteAction.entries[1]
+            is ZIP -> RemoteAction.entries[2]
+            is EMIT_CHANGES -> RemoteAction.entries[3]
+
+            is RemoteAction.MOVE -> entries[0]
+            is RemoteAction.DELETE_STALE -> entries[1]
+            is RemoteAction.ZIP -> entries[2]
+            is RemoteAction.EMIT_CHANGES -> entries[3]
+        }
+
+    open val isRemote get() = true
 
     infix fun isSimilarTo(other: Action) = this::class == other::class
 
@@ -64,11 +84,11 @@ sealed class Action {
         @Composable
         override fun getDescription() = buildAnnotatedString {
             withStyle(dullStyle) { append("from ") }
-            append(src.getGetDirectoryFromUri())
+            append(src.getDirectoryFromUri())
             if (scanSubdirectories)
                 withStyle(dullStyle) { append(" & subfolders") }
             withStyle(dullStyle) { append("\nto ") }
-            append(dest.getGetDirectoryFromUri())
+            append(dest.getDirectoryFromUri())
             if (preserveStructure)
                 withStyle(dullStyle) { append(" & subfolders") }
             withStyle(dullStyle) { append("\nas ") }
@@ -193,7 +213,7 @@ sealed class Action {
         override fun getDescription() = buildAnnotatedString {
 
             withStyle(dullStyle) { append("in ") }
-            append(src.getGetDirectoryFromUri())
+            append(src.getDirectoryFromUri())
             if (scanSubdirectories)
                 withStyle(dullStyle) { append(" & subfolders") }
             withStyle(dullStyle) { append("\nif unmodified for ") }
@@ -212,7 +232,7 @@ sealed class Action {
                             && Regex(srcFileNamePattern).matches(it.name!!)
                 }
                 ?.filter {
-                    System.currentTimeMillis() - it.lastModified() >=
+                    System.currentTimeMillis() - it.lastModified >=
                             // INFO: While debugging, treat days as seconds
                             if (context.isDebugBuild()) retentionDays * 1000L
                             else retentionTimeInMillis()
@@ -251,11 +271,11 @@ sealed class Action {
         @Composable
         override fun getDescription() = buildAnnotatedString {
             withStyle(dullStyle) { append("from ") }
-            append(src.getGetDirectoryFromUri())
+            append(src.getDirectoryFromUri())
             if (scanSubdirectories)
                 withStyle(dullStyle) { append(" & subfolders") }
             withStyle(dullStyle) { append("\nto ") }
-            append(dest.getGetDirectoryFromUri())
+            append(dest.getDirectoryFromUri())
             withStyle(dullStyle) { append("\nas ") }
             append(destFileNameTemplate)
         }
@@ -343,7 +363,7 @@ sealed class Action {
         @Composable
         override fun getDescription() = buildAnnotatedString {
             withStyle(dullStyle) { append("in ") }
-            append(src.getGetDirectoryFromUri())
+            append(src.getDirectoryFromUri())
             if (scanSubdirectories)
                 withStyle(dullStyle) { append(" & subfolders") }
             withStyle(dullStyle) { append("\nemit ") }
@@ -371,7 +391,7 @@ sealed class Action {
                             && it.name != null
                             && Regex(srcFileNamePattern).matches(it.name!!)
                 }
-                ?.filter { System.currentTimeMillis() - it.lastModified() <= modifiedWithin }
+                ?.filter { System.currentTimeMillis() - it.lastModified <= modifiedWithin }
                 ?: return
 
             if (srcFiles.isEmpty()) {

@@ -13,6 +13,7 @@ class AppContainer(private val context: Context) {
             FileFlowDatabase.getDatabase(context).ruleDao(),
             FileFlowDatabase.getDatabase(context).executionDao(),
             FileFlowDatabase.getDatabase(context).groupDao(),
+            FileFlowDatabase.getDatabase(context).serverDao(),
         )
     }
 

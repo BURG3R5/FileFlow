@@ -7,3 +7,5 @@
 -assumenosideeffects class co.adityarajput.fileflow.utils.Logger {
     public final void d(...);
 }
+
+#-printusage usage.txt

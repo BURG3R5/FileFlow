@@ -5,13 +5,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.work.PeriodicWorkRequest
+import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants
 import co.adityarajput.fileflow.data.Repository
 import co.adityarajput.fileflow.data.models.Action
+import co.adityarajput.fileflow.data.models.RemoteAction
 import co.adityarajput.fileflow.data.models.Rule
+import co.adityarajput.fileflow.data.models.Server
 import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.views.components.FolderPickerState
+import co.adityarajput.fileflow.views.components.RemoteFolderPickerState
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.time.ZonedDateTime
@@ -51,6 +58,9 @@ class UpsertRuleViewModel(
         val packageName: String = "",
         val extras: String = "{}",
         val modifiedWithin: Long = Constants.ONE_HOUR_IN_MILLIS,
+        val isRemoteAction: Boolean = false,
+        val srcServer: Server? = null,
+        val destServer: Server? = null,
     ) {
         companion object {
             fun from(rule: Rule) = when (rule.action) {
@@ -97,6 +107,60 @@ class UpsertRuleViewModel(
                     extras = rule.action.extras,
                     modifiedWithin = rule.action.modifiedWithin,
                 )
+
+                is RemoteAction.MOVE ->
+                    Values(
+                        rule.id, rule.action.base, rule.action.src,
+                        rule.action.srcFileNamePattern, rule.action.dest,
+                        rule.action.destFileNameTemplate, rule.action.superlative,
+                        rule.action.keepOriginal, rule.action.overwriteExisting,
+                        rule.action.scanSubdirectories, rule.action.preserveStructure,
+                        interval = rule.interval,
+                        cronString = rule.cronString,
+                        isRemoteAction = true,
+                        srcServer = rule.action.srcServer,
+                        destServer = rule.action.destServer,
+                    )
+
+                is RemoteAction.DELETE_STALE ->
+                    Values(
+                        rule.id, rule.action.base, rule.action.src,
+                        rule.action.srcFileNamePattern,
+                        scanSubdirectories = rule.action.scanSubdirectories,
+                        retentionDays = rule.action.retentionDays,
+                        interval = rule.interval,
+                        cronString = rule.cronString,
+                        isRemoteAction = true,
+                        srcServer = rule.action.srcServer,
+                    )
+
+                is RemoteAction.ZIP -> Values(
+                    rule.id, rule.action.base, rule.action.src,
+                    rule.action.srcFileNamePattern, rule.action.dest,
+                    rule.action.destFileNameTemplate,
+                    overwriteExisting = rule.action.overwriteExisting,
+                    scanSubdirectories = rule.action.scanSubdirectories,
+                    preserveStructure = rule.action.preserveStructure,
+                    interval = rule.interval,
+                    cronString = rule.cronString,
+                    isRemoteAction = true,
+                    srcServer = rule.action.srcServer,
+                    destServer = rule.action.destServer,
+                )
+
+                is RemoteAction.EMIT_CHANGES -> Values(
+                    rule.id, rule.action.base, rule.action.src,
+                    rule.action.srcFileNamePattern,
+                    scanSubdirectories = rule.action.scanSubdirectories,
+                    interval = rule.interval,
+                    cronString = rule.cronString,
+                    intent = rule.action.intent,
+                    packageName = rule.action.packageName,
+                    extras = rule.action.extras,
+                    modifiedWithin = rule.action.modifiedWithin,
+                    isRemoteAction = true,
+                    srcServer = rule.action.srcServer,
+                )
             }
         }
 
@@ -123,6 +187,30 @@ class UpsertRuleViewModel(
                         src, srcFileNamePattern, intent, packageName, extras, scanSubdirectories,
                         modifiedWithin,
                     )
+
+                is RemoteAction.MOVE ->
+                    RemoteAction.MOVE(
+                        srcServer, src, srcFileNamePattern, destServer, dest, destFileNameTemplate,
+                        scanSubdirectories, keepOriginal, overwriteExisting, superlative,
+                        preserveStructure,
+                    )
+
+                is RemoteAction.DELETE_STALE ->
+                    RemoteAction.DELETE_STALE(
+                        srcServer!!, src, srcFileNamePattern, retentionDays, scanSubdirectories,
+                    )
+
+                is RemoteAction.ZIP ->
+                    RemoteAction.ZIP(
+                        srcServer, src, srcFileNamePattern, destServer, dest, destFileNameTemplate,
+                        scanSubdirectories, overwriteExisting, preserveStructure,
+                    )
+
+                is RemoteAction.EMIT_CHANGES ->
+                    RemoteAction.EMIT_CHANGES(
+                        srcServer!!, src, srcFileNamePattern, intent, packageName, extras,
+                        scanSubdirectories, modifiedWithin,
+                    )
             },
             interval = interval,
             cronString = cronString,
@@ -135,16 +223,23 @@ class UpsertRuleViewModel(
         else State(values = Values.from(rule)),
     )
 
+    var servers by mutableStateOf<List<Server>>(emptyList())
+        private set
+
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
+    var remoteFolderPickerState by mutableStateOf<RemoteFolderPickerState?>(null)
 
     init {
         updateForm(context)
+        viewModelScope.launch {
+            servers = repository.servers().first()
+        }
     }
 
     fun updateForm(context: Context, values: Values = state.values, page: FormPage = state.page) {
         var currentSrcFiles: List<File>? = null
         try {
-            if (values.src.isNotBlank())
+            if (values.src.isNotBlank() && values.srcServer == null)
                 currentSrcFiles = File.fromPath(context, values.src)!!
                     .listChildren(values.scanSubdirectories)
                     .filter { it.isFile && it.name != null }
@@ -162,14 +257,28 @@ class UpsertRuleViewModel(
                 ?.also { if (it.isEmpty()) warning = RuleFormWarning.NO_MATCHES_IN_SRC }
 
             if (values.destFileNameTemplate.isNotBlank()) {
-                if (matchingSrcFiles != null && values.actionBase is Action.MOVE) {
-                    predictedDestFileNames = matchingSrcFiles
-                        .map { (values.toRule().action as Action.MOVE).getDestFileName(it) }
-                        .distinct()
-                }
-                if (values.actionBase is Action.ZIP) {
-                    predictedDestFileNames =
-                        listOf((values.toRule().action as Action.ZIP).getDestFileName())
+                when (values.actionBase) {
+                    is Action.MOVE if (matchingSrcFiles != null) ->
+                        predictedDestFileNames = matchingSrcFiles
+                            .map { (values.toRule().action as Action.MOVE).getDestFileName(it) }
+                            .distinct()
+
+                    is RemoteAction.MOVE if (matchingSrcFiles != null) ->
+                        predictedDestFileNames = matchingSrcFiles
+                            .map { (values.toRule().action as RemoteAction.MOVE).getDestFileName(it) }
+                            .distinct()
+
+                    is Action.ZIP -> {
+                        predictedDestFileNames =
+                            listOf((values.toRule().action as Action.ZIP).getDestFileName())
+                    }
+
+                    is RemoteAction.ZIP -> {
+                        predictedDestFileNames =
+                            listOf((values.toRule().action as RemoteAction.ZIP).getDestFileName())
+                    }
+
+                    else -> {}
                 }
             }
         } catch (_: Exception) {
@@ -208,8 +317,10 @@ enum class FormPage {
     fun previous() = entries[ordinal - 1]
 }
 
+@Suppress("KotlinConstantConditions")
 enum class RuleFormError {
     BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE, MUST_END_IN_ZIP, INVALID_JSON,
+    REMOTE_ACTION_WITHOUT_SERVER,
     INTERVAL_TOO_SHORT, INTERVAL_TOO_LONG, INVALID_CRON_STRING, CRON_TOO_FREQUENT;
 
     companion object {
@@ -225,14 +336,14 @@ enum class RuleFormError {
             }
 
             when (values.actionBase) {
-                is Action.MOVE -> {
+                is Action.MOVE, is RemoteAction.MOVE -> {
                     if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
                         return BLANK_FIELDS
-                    if (values.predictedDestFileNames == null)
+                    if (values.predictedDestFileNames == null && !values.isRemoteAction)
                         return INVALID_TEMPLATE
                 }
 
-                is Action.ZIP -> {
+                is Action.ZIP, is RemoteAction.ZIP -> {
                     if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
                         return BLANK_FIELDS
                     if (values.predictedDestFileNames?.size != 1)
@@ -241,7 +352,7 @@ enum class RuleFormError {
                         return MUST_END_IN_ZIP
                 }
 
-                is Action.EMIT_CHANGES -> {
+                is Action.EMIT_CHANGES, is RemoteAction.EMIT_CHANGES -> {
                     if (values.intent.isBlank() || values.packageName.isBlank())
                         return BLANK_FIELDS
                     try {
@@ -253,6 +364,22 @@ enum class RuleFormError {
                 }
 
                 else -> {}
+            }
+
+            if (BuildConfig.HAS_NETWORK_FEATURE) {
+                when (values.actionBase) {
+                    is RemoteAction.MOVE, is RemoteAction.ZIP -> {
+                    if (values.srcServer == null && values.destServer == null)
+                        return REMOTE_ACTION_WITHOUT_SERVER
+                }
+
+                    is RemoteAction.DELETE_STALE, is RemoteAction.EMIT_CHANGES -> {
+                        if (values.srcServer == null)
+                            return REMOTE_ACTION_WITHOUT_SERVER
+                    }
+
+                    else -> {}
+                }
             }
 
 

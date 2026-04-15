@@ -13,6 +13,8 @@ import co.adityarajput.fileflow.Constants.IS_FIRST_RUN
 import co.adityarajput.fileflow.Constants.STATE
 import co.adityarajput.fileflow.viewmodels.AppearanceViewModel
 import co.adityarajput.fileflow.views.screens.*
+import co.adityarajput.fileflow.views.screens.servers.CreateServerScreen
+import co.adityarajput.fileflow.views.screens.servers.ServersScreen
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -52,6 +54,7 @@ fun Navigator(controller: NavHostController, appearanceViewModel: AppearanceView
         composable(Routes.SETTINGS.name) {
             SettingsScreen(
                 { controller.navigate(Routes.GROUPS.name) },
+                { controller.navigate(Routes.SERVERS.name) },
                 { controller.navigate(Routes.LICENSES.name) },
                 { controller.navigate(Routes.ABOUT.name) },
                 controller::popBackStack,
@@ -63,6 +66,15 @@ fun Navigator(controller: NavHostController, appearanceViewModel: AppearanceView
                 { controller.navigate(UpsertGroupRoute(it)) },
                 controller::popBackStack,
             )
+        }
+        composable(Routes.SERVERS.name) {
+            ServersScreen(
+                { controller.navigate(Routes.CREATE_SERVER.name) },
+                controller::popBackStack,
+            )
+        }
+        composable(Routes.CREATE_SERVER.name) {
+            CreateServerScreen(controller::popBackStack)
         }
         composable<UpsertGroupRoute> {
             UpsertGroupScreen(
@@ -81,6 +93,8 @@ enum class Routes {
     EXECUTIONS,
     SETTINGS,
     GROUPS,
+    SERVERS,
+    CREATE_SERVER,
     LICENSES,
     ABOUT,
 }

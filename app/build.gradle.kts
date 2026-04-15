@@ -33,6 +33,7 @@ android {
             applicationIdSuffix = ".debug"
             resValue("string", "app_name_launcher", "FileFlow Debug")
             manifestPlaceholders["allowBackup"] = false
+            buildConfigField("boolean", "HAS_NETWORK_FEATURE", "true")
         }
         create("nightly") {
             isDebuggable = false
@@ -45,6 +46,7 @@ android {
             applicationIdSuffix = ".nightly"
             resValue("string", "app_name_launcher", "FileFlow Nightly")
             manifestPlaceholders["allowBackup"] = true
+            buildConfigField("boolean", "HAS_NETWORK_FEATURE", "true")
         }
         release {
             isDebuggable = false
@@ -55,11 +57,19 @@ android {
                 "proguard/release.pro",
             )
             manifestPlaceholders["allowBackup"] = true
+            buildConfigField("boolean", "HAS_NETWORK_FEATURE", "false")
+        }
+        create("releaseWithNetwork") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".network"
+            matchingFallbacks += listOf("release")
+            buildConfigField("boolean", "HAS_NETWORK_FEATURE", "true")
         }
     }
     buildFeatures {
         compose = true
         resValues = true
+        buildConfig = true
     }
 }
 
@@ -94,6 +104,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.aboutlibraries.compose)
     implementation(libs.cron.utils)
+    implementation(libs.sshj)
+    implementation(libs.google.crypto.tink)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
