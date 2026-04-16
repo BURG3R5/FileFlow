@@ -825,11 +825,11 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         fontWeight = FontWeight.Normal,
     )
     if (viewModel.state.error == RuleFormError.INVALID_REGEX) ErrorText(R.string.invalid_regex)
-    else if (viewModel.state.error == RuleFormError.INVALID_TEMPLATE) ErrorText(R.string.invalid_template)
     else if (viewModel.state.error == RuleFormError.MUST_END_IN_ZIP) ErrorText(R.string.must_end_in_zip)
     else if (viewModel.state.error == RuleFormError.INVALID_JSON) ErrorText(R.string.invalid_json)
     else if (viewModel.state.error == RuleFormError.REMOTE_ACTION_WITHOUT_SERVER) ErrorText(R.string.remote_action_without_servers)
     else if (viewModel.state.warning == RuleFormWarning.NO_MATCHES_IN_SRC) WarningText(R.string.pattern_doesnt_match_src_files)
+    else if (viewModel.state.warning == RuleFormWarning.CANNOT_PREDICT_DEST_NAMES) WarningText(R.string.cannot_predict_dest_names)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

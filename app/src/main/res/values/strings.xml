@@ -83,9 +83,7 @@
     <!-- endregion -->
     <!-- region ImproperRulesetDialog -->
     <string name="improper_ruleset">Incompatible rules</string>
-    <string name="explain_saf_to_io_migration">The following rules must be migrated to broader access.</string>
-    <string name="explain_missing_saf_access">The following rules cannot be executed with current permissions.</string>
-    <string name="please_reselect_folders">Please tap on each tile and reselect folders.</string>
+    <string name="explain_improper_rules">The following rules cannot be executed with the current permissions. Please tap on each tile and reselect folders.</string>
     <string name="dismiss">Dismiss</string>
     <!-- endregion -->
     <!-- region Action -->
@@ -191,7 +189,7 @@
     <string name="modified_within">Modified within</string>
     <string name="pattern_advice"><![CDATA[Click <a href=\"https://github.com/BURG3R5/FileFlow/wiki/Examples\">here↗</a> for example patterns and templates.]]></string>
     <string name="invalid_regex">Regex pattern contains errors</string>
-    <string name="invalid_template">Regex template contains errors</string>
+    <string name="cannot_predict_dest_names">Cannot predict destination file names</string>
     <string name="must_end_in_zip">Archive must have extension \".zip\"</string>
     <string name="invalid_json">JSON contains errors</string>
     <string name="remote_action_without_servers">"Remote capabilities are enabled but servers aren't utilized"</string>
@@ -219,7 +217,8 @@
     <string name="emit_changes_phrase">Emit an intent if recently modified</string>
     <!-- endregion -->
     <!-- region FolderPickerBottomSheet -->
-    <string name="storage_switch">Switch storage</string>
+    <string name="current_storage">"Current storage: "</string>
+    <string name="saf">SAF</string>
     <string name="parent_directory">Back</string>
     <string name="empty_folder">(Empty)</string>
     <string name="folder">Folder</string>

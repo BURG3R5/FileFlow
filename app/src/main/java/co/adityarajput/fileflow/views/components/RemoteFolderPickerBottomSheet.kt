@@ -57,7 +57,7 @@ fun RemoteFolderPickerBottomSheet(viewModel: UpsertRuleViewModel) {
                 dimensionResource(R.dimen.padding_medium),
                 dimensionResource(R.dimen.padding_small),
             ),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelLarge,
             overflow = TextOverflow.StartEllipsis,
             maxLines = 1,
         )

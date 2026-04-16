@@ -284,6 +284,13 @@ class UpsertRuleViewModel(
         } catch (_: Exception) {
         }
 
+        if (
+            (values.actionBase is Action.MOVE && predictedDestFileNames == null)
+            || (values.actionBase is Action.ZIP && predictedDestFileNames?.size != 1)
+        ) {
+            warning = RuleFormWarning.CANNOT_PREDICT_DEST_NAMES
+        }
+
         val values = values.copy(
             currentSrcFileNames = currentSrcFiles.orEmpty().mapNotNull { it.name }.distinct(),
             predictedDestFileNames = predictedDestFileNames,
@@ -319,7 +326,7 @@ enum class FormPage {
 
 @Suppress("KotlinConstantConditions")
 enum class RuleFormError {
-    BLANK_FIELDS, INVALID_REGEX, INVALID_TEMPLATE, MUST_END_IN_ZIP, INVALID_JSON,
+    BLANK_FIELDS, INVALID_REGEX, MUST_END_IN_ZIP, INVALID_JSON,
     REMOTE_ACTION_WITHOUT_SERVER,
     INTERVAL_TOO_SHORT, INTERVAL_TOO_LONG, INVALID_CRON_STRING, CRON_TOO_FREQUENT;
 
@@ -339,16 +346,15 @@ enum class RuleFormError {
                 is Action.MOVE, is RemoteAction.MOVE -> {
                     if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
                         return BLANK_FIELDS
-                    if (values.predictedDestFileNames == null && !values.isRemoteAction)
-                        return INVALID_TEMPLATE
                 }
 
                 is Action.ZIP, is RemoteAction.ZIP -> {
                     if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
                         return BLANK_FIELDS
-                    if (values.predictedDestFileNames?.size != 1)
-                        return INVALID_TEMPLATE
-                    if (!Regex("^.+\\.(zip|ZIP)$").matches(values.predictedDestFileNames.first()))
+                    if (!Regex("^.+\\.(zip|ZIP)$").matches(
+                            values.predictedDestFileNames?.first() ?: "",
+                        )
+                    )
                         return MUST_END_IN_ZIP
                 }
 
@@ -404,4 +410,4 @@ enum class RuleFormError {
     }
 }
 
-enum class RuleFormWarning { NO_MATCHES_IN_SRC }
+enum class RuleFormWarning { NO_MATCHES_IN_SRC, CANNOT_PREDICT_DEST_NAMES }

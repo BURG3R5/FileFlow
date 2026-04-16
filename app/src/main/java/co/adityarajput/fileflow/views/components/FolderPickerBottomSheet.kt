@@ -1,10 +1,9 @@
 package co.adityarajput.fileflow.views.components
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -16,11 +15,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.utils.getAllStorages
+import co.adityarajput.fileflow.utils.requestPersistableFolderPermission
 import co.adityarajput.fileflow.viewmodels.UpsertRuleViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,25 +33,75 @@ fun FolderPickerBottomSheet(viewModel: UpsertRuleViewModel) {
     val context = LocalContext.current
     val hideSheet = { viewModel.folderPickerState = null }
 
-    val storages = remember { context.getAllStorages() }
-    var currentStorage by remember { mutableIntStateOf(0) }
+    val storages = remember { context.getAllStorages().toList() }
 
-    var currentDir by remember { mutableStateOf(storages[0]) }
+    var storageDropdownExpanded by remember { mutableStateOf(false) }
+    var currentStorage by remember { mutableIntStateOf(0) }
+    var currentDir by remember(currentStorage) { mutableStateOf(storages[currentStorage].first) }
     val items = remember(currentDir) {
         currentDir.listFiles()?.sortedBy { it.name.lowercase() }?.sortedBy { it.isFile }.orEmpty()
+    }
+
+    val safPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        context.requestPersistableFolderPermission(uri)
+        viewModel.updateForm(
+            context,
+            viewModel.state.values.run {
+                if (viewModel.folderPickerState == FolderPickerState.SRC) copy(src = uri.toString())
+                else copy(dest = uri.toString())
+            },
+        )
+        hideSheet()
     }
 
     ModalBottomSheet(
         hideSheet,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
-        Text(
-            currentDir.path,
+        Box(
             Modifier.padding(
                 dimensionResource(R.dimen.padding_medium),
                 dimensionResource(R.dimen.padding_small),
             ),
-            style = MaterialTheme.typography.labelMedium,
+        ) {
+            Text(
+                buildAnnotatedString {
+                    append(stringResource(R.string.current_storage))
+                    withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
+                        append(storages[currentStorage].second)
+                    }
+                },
+                Modifier.clickable { storageDropdownExpanded = true },
+                style = MaterialTheme.typography.labelLarge,
+            )
+            DropdownMenu(storageDropdownExpanded, { storageDropdownExpanded = false }) {
+                DropdownMenuItem(
+                    { Text(stringResource(R.string.saf)) },
+                    {
+                        safPicker.launch(null)
+                        storageDropdownExpanded = false
+                    },
+                )
+                storages.forEachIndexed { i, (_, name) ->
+                    DropdownMenuItem(
+                        { Text(name) },
+                        {
+                            currentStorage = i
+                            storageDropdownExpanded = false
+                        },
+                    )
+                }
+            }
+        }
+        Text(
+            currentDir.path,
+            Modifier
+                .padding(horizontal = dimensionResource(R.dimen.padding_medium))
+                .padding(bottom = dimensionResource(R.dimen.padding_small)),
+            style = MaterialTheme.typography.labelLarge,
             overflow = TextOverflow.StartEllipsis,
             maxLines = 1,
         )
@@ -58,25 +112,6 @@ fun FolderPickerBottomSheet(viewModel: UpsertRuleViewModel) {
                 .padding(dimensionResource(R.dimen.padding_medium)),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium)),
         ) {
-            if (currentDir in storages) {
-                item {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                currentStorage = (currentStorage + 1) % storages.size
-                                currentDir = storages[currentStorage]
-                            },
-                        Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.folder_switch),
-                            stringResource(R.string.storage_switch),
-                        )
-                        Text(stringResource(R.string.storage_switch))
-                    }
-                }
-            }
             if (currentDir.parentFile?.canRead() ?: false) {
                 item {
                     Row(
