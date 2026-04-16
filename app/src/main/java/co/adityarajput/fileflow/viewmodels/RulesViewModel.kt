@@ -12,11 +12,13 @@ import co.adityarajput.fileflow.data.models.Rule
 import co.adityarajput.fileflow.utils.Logger
 import co.adityarajput.fileflow.utils.deleteWorkFor
 import co.adityarajput.fileflow.utils.scheduleWork
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class RulesViewModel(private val repository: Repository) : ViewModel() {
     data class State(val rules: List<Rule>? = null)
@@ -33,11 +35,13 @@ class RulesViewModel(private val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             val latestLogBeforeExecution = Logger.logs.lastOrNull()
 
-            selectedRule!!.action.execute(context) {
-                repository.registerExecution(
-                    selectedRule!!,
-                    Execution(it, selectedRule!!.action.verb),
-                )
+            withContext(Dispatchers.IO) {
+                selectedRule!!.action.execute(context) {
+                    repository.registerExecution(
+                        selectedRule!!,
+                        Execution(it, selectedRule!!.action.verb),
+                    )
+                }
             }
 
             val recentErrorLog = Logger.logs

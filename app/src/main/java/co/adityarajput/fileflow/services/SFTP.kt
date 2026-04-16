@@ -71,61 +71,57 @@ class SFTP {
 
     val isConnected get() = sshClient?.isConnected == true
 
-    private suspend fun connect(server: Server) {
+    private fun connect(server: Server) {
         try {
-            withContext(Dispatchers.IO) {
-                disconnect()
+            disconnect()
 
-                sshClient = SSHClient(
-                    DefaultConfig().apply {
-                        keyExchangeFactories = listOf(DHGexSHA256.Factory())
-                    },
-                ).apply {
-                    addHostKeyVerifier(PromiscuousVerifier())
-                    connect(server.host, server.port)
+            sshClient = SSHClient(
+                DefaultConfig().apply {
+                    keyExchangeFactories = listOf(DHGexSHA256.Factory())
+                },
+            ).apply {
+                addHostKeyVerifier(PromiscuousVerifier())
+                connect(server.host, server.port)
 
-                    if (server.privateKey != null) {
-                        val pemKey = server.privateKey!!
-                        val tempKeyFile = IOFile(Files.createTempFile("key", ".pem").pathString)
-                        try {
-                            tempKeyFile.writeText(pemKey)
-                            authPublickey(
-                                server.username,
-                                OpenSSHKeyFile().apply {
-                                    init(tempKeyFile)
-                                },
-                            )
-                        } finally {
-                            tempKeyFile.delete()
-                        }
-                    } else if (!server.password.isNullOrBlank()) {
-                        authPassword(server.username, server.password!!)
+                if (server.privateKey != null) {
+                    val pemKey = server.privateKey!!
+                    val tempKeyFile = IOFile(Files.createTempFile("key", ".pem").pathString)
+                    try {
+                        tempKeyFile.writeText(pemKey)
+                        authPublickey(
+                            server.username,
+                            OpenSSHKeyFile().apply {
+                                init(tempKeyFile)
+                            },
+                        )
+                    } finally {
+                        tempKeyFile.delete()
                     }
+                } else if (!server.password.isNullOrBlank()) {
+                    authPassword(server.username, server.password!!)
                 }
-                sftpClient = sshClient!!.newSFTPClient()
-
-                Logger.d("SFTP", "Connected to $server")
             }
+            sftpClient = sshClient!!.newSFTPClient()
+
+            Logger.d("SFTP", "Connected to $server")
         } catch (e: Exception) {
             Logger.e("SFTP", "Failed to connect to $server", e)
         }
     }
 
-    private suspend fun disconnect() {
-        withContext(Dispatchers.IO) {
-            try {
-                sftpClient?.close()
-            } catch (_: Exception) {
-            }
-            try {
-                sshClient?.disconnect()
-            } catch (_: Exception) {
-            }
-            sftpClient = null
-            sshClient = null
-
-            Logger.d("SFTP", "Disconnected")
+    private fun disconnect() {
+        try {
+            sftpClient?.close()
+        } catch (_: Exception) {
         }
+        try {
+            sshClient?.disconnect()
+        } catch (_: Exception) {
+        }
+        sftpClient = null
+        sshClient = null
+
+        Logger.d("SFTP", "Disconnected")
     }
 }
 

@@ -6,6 +6,7 @@ import android.os.Environment
 import android.os.storage.StorageManager
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.RemoteAction
 import co.adityarajput.fileflow.data.models.Rule
 import kotlinx.coroutines.Dispatchers
@@ -22,17 +23,19 @@ sealed class File {
     companion object {
         fun fromPath(context: Context, path: String): File? {
             try {
-                return if (context.isGranted(Permission.MANAGE_EXTERNAL_STORAGE)) {
-                    IOFile(path).let {
-                        if (it.exists()) FSFile(it) else null
-                    }
-                } else {
-                    DocumentFile.fromTreeUri(context, path.toUri())?.let {
-                        if (it.exists()) SAFFile(it) else null
-                    }
-                }
+                return DocumentFile.fromTreeUri(context, path.toUri())?.let {
+                    if (it.exists()) SAFFile(it) else null
+                }!!
             } catch (e: Exception) {
-                Logger.e("Files", "Error while creating file from path: $path", e)
+                Logger.w("Files", "Error while creating SAFFile from path: $path", e)
+            }
+
+            try {
+                return IOFile(path).let {
+                    if (it.exists()) FSFile(it) else null
+                }!!
+            } catch (e: Exception) {
+                Logger.w("Files", "Error while creating FSFile from path: $path", e)
             }
 
             return null
@@ -55,20 +58,6 @@ sealed class File {
         override val lastModified get() = documentFile.lastModified()
 
         override val length get() = documentFile.length()
-
-        override fun isIdenticalTo(other: File, context: Context): Boolean {
-            if (other !is SAFFile) return false
-
-            this.getInputStream(context).use { src ->
-                other.getInputStream(context).use { dest ->
-                    if (src == null || dest == null) {
-                        Logger.e("Files", "Failed to open file(s)")
-                        return false
-                    }
-                    return src.readBytes().contentEquals(dest.readBytes())
-                }
-            }
-        }
 
         override fun listDirectChildren() =
             documentFile.listFiles().map { SAFFile(it) }
@@ -108,30 +97,40 @@ sealed class File {
             overwriteExisting: Boolean,
             context: Context,
         ): String? {
-            if (destDir !is SAFFile)
-                throw IllegalArgumentException("Destination directory must be a SAFFile")
+            var destFilePath: String? = null
 
-            destDir.documentFile.findFile(destFileName)?.run {
-                if (overwriteExisting) delete()
-                else throw Exception("$destFileName already exists")
+            val destFile = when (destDir) {
+                is SAFFile -> {
+                    destDir.documentFile.findFile(destFileName)?.run {
+                        if (overwriteExisting) delete()
+                        else throw Exception("$destFileName already exists")
+                    }
+
+                    SAFFile(
+                        destDir.documentFile.createFile(
+                            documentFile.type ?: "application/octet-stream",
+                            destFileName,
+                        )!!,
+                    )
+                }
+
+                is FSFile -> IOFile(destDir.ioFile, destFileName).let {
+                    it.createNewFile()
+                    destFilePath = it.absolutePath
+
+                    FSFile(it)
+                }
             }
 
-            val destFile =
-                destDir.documentFile.createFile(
-                    documentFile.type ?: "application/octet-stream",
-                    destFileName,
-                )!!
-
-            val resolver = context.contentResolver
-            resolver.openInputStream(this.documentFile.uri).use { srcStream ->
-                resolver.openOutputStream(destFile.uri).use { destStream ->
+            this.getInputStream(context).use { srcStream ->
+                destFile.getOutputStream(context).use { destStream ->
                     srcStream!!.copyTo(destStream!!)
                 }
             }
 
             if (!keepOriginal) delete()
 
-            return null
+            return destFilePath
         }
 
         override fun delete() = documentFile.delete()
@@ -158,9 +157,6 @@ sealed class File {
 
         override fun getOutputStream(context: Context) = ioFile.outputStream()
 
-        override fun isIdenticalTo(other: File, context: Context) =
-            other is FSFile && ioFile.readBytes().contentEquals(other.ioFile.readBytes())
-
         override fun listDirectChildren() = ioFile.listFiles()?.map { FSFile(it) }.orEmpty()
 
         override fun createFile(name: String, mimeType: String) =
@@ -180,9 +176,6 @@ sealed class File {
             overwriteExisting: Boolean,
             context: Context,
         ): String? {
-            if (destDir !is FSFile)
-                throw IllegalArgumentException("Destination directory must be a FSFile")
-
             val options = mutableListOf<StandardCopyOption>()
             if (keepOriginal) options.add(StandardCopyOption.COPY_ATTRIBUTES)
             if (overwriteExisting) options.add(StandardCopyOption.REPLACE_EXISTING)
@@ -190,6 +183,9 @@ sealed class File {
 
             try {
                 withContext(Dispatchers.IO) {
+                    if (destDir !is FSFile)
+                        throw Exception("Destination is not a FSFile")
+
                     destFilePath = destDir.ioFile.toPath().resolve(destFileName).toString()
                     if (keepOriginal) {
                         Files.copy(
@@ -215,14 +211,32 @@ sealed class File {
                 )
 
                 withContext(Dispatchers.IO) {
-                    val destFile = IOFile(destDir.ioFile, destFileName)
+                    val destFile = when (destDir) {
+                        is FSFile -> IOFile(destDir.ioFile, destFileName).let {
+                            it.createNewFile()
+                            destFilePath = it.absolutePath
 
-                    destFile.createNewFile()
-                    destFilePath = destFile.absolutePath
+                            FSFile(it)
+                        }
 
-                    this@FSFile.ioFile.inputStream().use { srcStream ->
-                        destFile.outputStream().use { destStream ->
-                            srcStream.copyTo(destStream)
+                        is SAFFile -> {
+                            destDir.documentFile.findFile(destFileName)?.run {
+                                if (overwriteExisting) delete()
+                                else throw Exception("$destFileName already exists")
+                            }
+
+                            SAFFile(
+                                destDir.documentFile.createFile(
+                                    "application/octet-stream",
+                                    destFileName,
+                                )!!,
+                            )
+                        }
+                    }
+
+                    this@FSFile.getInputStream(context).use { srcStream ->
+                        destFile.getOutputStream(context).use { destStream ->
+                            srcStream.copyTo(destStream!!)
                         }
                     }
                 }
@@ -266,7 +280,17 @@ sealed class File {
                 }
         }
 
-    abstract fun isIdenticalTo(other: File, context: Context): Boolean
+    fun isIdenticalTo(other: File, context: Context): Boolean {
+        this.getInputStream(context).use { src ->
+            other.getInputStream(context).use { dest ->
+                if (src == null || dest == null) {
+                    Logger.e("Files", "Failed to open file(s)")
+                    return false
+                }
+                return src.readBytes().contentEquals(dest.readBytes())
+            }
+        }
+    }
 
     abstract fun listDirectChildren(): List<File>
 
@@ -316,12 +340,29 @@ fun String.getDirectoryFromUri() =
 
 fun Context.findRulesToBeMigrated(rules: List<Rule>) =
     rules.filter {
-        ((it.action as? RemoteAction)?.srcServer == null)
-                && File.fromPath(this, it.action.src) == null
+        when (it.action) {
+            is RemoteAction.MOVE if (it.action.destServer == null) ->
+                File.fromPath(this, it.action.dest) == null
+
+            is RemoteAction.ZIP if (it.action.destServer == null) ->
+                File.fromPath(this, it.action.dest) == null
+
+            is RemoteAction ->
+                it.action.srcServer == null && File.fromPath(this, it.action.src) == null
+
+            is Action.MOVE ->
+                File.fromPath(this, it.action.dest) == null
+
+            is Action.ZIP ->
+                File.fromPath(this, it.action.dest) == null
+
+            is Action ->
+                File.fromPath(this, it.action.src) == null
+        }
     }
 
-fun Context.getAllStorages(): List<IOFile> {
-    val storages = mutableListOf<IOFile>()
+fun Context.getAllStorages(): Map<IOFile, String> {
+    val storages = mutableMapOf<IOFile, String>()
 
     try {
         getExternalFilesDirs(null).forEach {
@@ -332,18 +373,20 @@ fun Context.getAllStorages(): List<IOFile> {
                 if (dir.canRead())
                     storage = dir
             }
-            storages.add(storage)
+            storages[storage] = storage.name
         }
     } catch (e: Exception) {
         Logger.e("Files", "Couldn't extract storages from external app directories", e)
     }
+
+    storages[Environment.getExternalStorageDirectory()] = "Primary Storage"
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         try {
             (getSystemService(Context.STORAGE_SERVICE) as StorageManager).getStorageVolumes()
                 .forEach {
                     if (it.directory != null && it.directory!!.canRead()) {
-                        storages.add(it.directory!!)
+                        storages[it.directory!!] = it.getDescription(this)
                     }
                 }
         } catch (e: Exception) {
@@ -351,11 +394,7 @@ fun Context.getAllStorages(): List<IOFile> {
         }
     }
 
-    Logger.d("Files", "Found storages: ${storages.joinToString { it.absolutePath }}")
+    Logger.d("Files", "Found storages: ${storages.keys.joinToString { it.absolutePath }}")
 
-    return storages.distinct().apply {
-        val primaryStorage = Environment.getExternalStorageDirectory()
-        storages.remove(primaryStorage)
-        storages.add(0, primaryStorage)
-    }
+    return storages
 }

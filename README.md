@@ -20,6 +20,7 @@ FileFlow scans your files periodically and organizes them according to your rule
   1. Copy, move, or rename files 📁
   2. Delete stale files 🗑
   3. Create zip archives 🗜
+  4. Emit intents when files are modified 📡
 - **Schedule** - Choose when and how often rules run ⏰
 - **History** - Recent executions are stored (locally) ⏳
 - **Shortcuts** - Execute groups of rules from your homescreen 🚀

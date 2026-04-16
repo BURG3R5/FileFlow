@@ -16,6 +16,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import java.io.BufferedOutputStream
+import java.net.URLConnection
 import java.nio.file.FileAlreadyExistsException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -188,7 +189,12 @@ sealed class Action {
 
             MediaScannerConnection.scanFile(
                 context,
-                destPaths.filterNotNull().distinct().toTypedArray(),
+                destPaths.filter { path ->
+                    path != null && Constants.MEDIA_PREFIXES.any {
+                        URLConnection.guessContentTypeFromName(path)
+                            .startsWith(it)
+                    }
+                }.distinct().toTypedArray(),
                 null,
             ) { path, _ ->
                 Logger.d("Action", "Scanned media at $path")

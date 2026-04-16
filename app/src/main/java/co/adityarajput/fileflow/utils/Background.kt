@@ -41,7 +41,7 @@ suspend fun Context.scheduleWork() {
                     TimeUnit.MILLISECONDS,
                     PeriodicWorkRequest.MIN_PERIODIC_FLEX_MILLIS,
                     TimeUnit.MILLISECONDS,
-                ).setInputData(workDataOf(Constants.EXTRA_RULE_ID to it.id)).apply {
+                ).setInputData(workDataOf(Constants.RULE_ID to it.id)).apply {
                     if (BuildConfig.HAS_NETWORK_FEATURE && it.action.isRemote)
                         setConstraints(
                             Constraints.Builder()
