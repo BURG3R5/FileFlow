@@ -13,7 +13,7 @@ class Worker(private val context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val repository = AppContainer(context).repository
-        val rule = repository.rule(inputData.getInt(Constants.EXTRA_RULE_ID, -1))
+        val rule = repository.rule(inputData.getInt(Constants.RULE_ID, -1))
 
         if (rule != null && rule.enabled) {
             if (rule.cronString != null) {

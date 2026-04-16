@@ -64,26 +64,24 @@ class UpsertRuleViewModel(
     ) {
         companion object {
             fun from(rule: Rule) = when (rule.action) {
-                is Action.MOVE ->
-                    Values(
-                        rule.id, rule.action.base, rule.action.src,
-                        rule.action.srcFileNamePattern, rule.action.dest,
-                        rule.action.destFileNameTemplate, rule.action.superlative,
-                        rule.action.keepOriginal, rule.action.overwriteExisting,
-                        rule.action.scanSubdirectories, rule.action.preserveStructure,
-                        interval = rule.interval,
-                        cronString = rule.cronString,
-                    )
+                is Action.MOVE -> Values(
+                    rule.id, rule.action.base, rule.action.src,
+                    rule.action.srcFileNamePattern, rule.action.dest,
+                    rule.action.destFileNameTemplate, rule.action.superlative,
+                    rule.action.keepOriginal, rule.action.overwriteExisting,
+                    rule.action.scanSubdirectories, rule.action.preserveStructure,
+                    interval = rule.interval,
+                    cronString = rule.cronString,
+                )
 
-                is Action.DELETE_STALE ->
-                    Values(
-                        rule.id, rule.action.base, rule.action.src,
-                        rule.action.srcFileNamePattern,
-                        scanSubdirectories = rule.action.scanSubdirectories,
-                        retentionDays = rule.action.retentionDays,
-                        interval = rule.interval,
-                        cronString = rule.cronString,
-                    )
+                is Action.DELETE_STALE -> Values(
+                    rule.id, rule.action.base, rule.action.src,
+                    rule.action.srcFileNamePattern,
+                    scanSubdirectories = rule.action.scanSubdirectories,
+                    retentionDays = rule.action.retentionDays,
+                    interval = rule.interval,
+                    cronString = rule.cronString,
+                )
 
                 is Action.ZIP -> Values(
                     rule.id, rule.action.base, rule.action.src,
@@ -108,31 +106,29 @@ class UpsertRuleViewModel(
                     modifiedWithin = rule.action.modifiedWithin,
                 )
 
-                is RemoteAction.MOVE ->
-                    Values(
-                        rule.id, rule.action.base, rule.action.src,
-                        rule.action.srcFileNamePattern, rule.action.dest,
-                        rule.action.destFileNameTemplate, rule.action.superlative,
-                        rule.action.keepOriginal, rule.action.overwriteExisting,
-                        rule.action.scanSubdirectories, rule.action.preserveStructure,
-                        interval = rule.interval,
-                        cronString = rule.cronString,
-                        isRemoteAction = true,
-                        srcServer = rule.action.srcServer,
-                        destServer = rule.action.destServer,
-                    )
+                is RemoteAction.MOVE -> Values(
+                    rule.id, rule.action.base, rule.action.src,
+                    rule.action.srcFileNamePattern, rule.action.dest,
+                    rule.action.destFileNameTemplate, rule.action.superlative,
+                    rule.action.keepOriginal, rule.action.overwriteExisting,
+                    rule.action.scanSubdirectories, rule.action.preserveStructure,
+                    interval = rule.interval,
+                    cronString = rule.cronString,
+                    isRemoteAction = true,
+                    srcServer = rule.action.srcServer,
+                    destServer = rule.action.destServer,
+                )
 
-                is RemoteAction.DELETE_STALE ->
-                    Values(
-                        rule.id, rule.action.base, rule.action.src,
-                        rule.action.srcFileNamePattern,
-                        scanSubdirectories = rule.action.scanSubdirectories,
-                        retentionDays = rule.action.retentionDays,
-                        interval = rule.interval,
-                        cronString = rule.cronString,
-                        isRemoteAction = true,
-                        srcServer = rule.action.srcServer,
-                    )
+                is RemoteAction.DELETE_STALE -> Values(
+                    rule.id, rule.action.base, rule.action.src,
+                    rule.action.srcFileNamePattern,
+                    scanSubdirectories = rule.action.scanSubdirectories,
+                    retentionDays = rule.action.retentionDays,
+                    interval = rule.interval,
+                    cronString = rule.cronString,
+                    isRemoteAction = true,
+                    srcServer = rule.action.srcServer,
+                )
 
                 is RemoteAction.ZIP -> Values(
                     rule.id, rule.action.base, rule.action.src,
@@ -375,9 +371,9 @@ enum class RuleFormError {
             if (BuildConfig.HAS_NETWORK_FEATURE) {
                 when (values.actionBase) {
                     is RemoteAction.MOVE, is RemoteAction.ZIP -> {
-                    if (values.srcServer == null && values.destServer == null)
-                        return REMOTE_ACTION_WITHOUT_SERVER
-                }
+                        if (values.srcServer == null && values.destServer == null)
+                            return REMOTE_ACTION_WITHOUT_SERVER
+                    }
 
                     is RemoteAction.DELETE_STALE, is RemoteAction.EMIT_CHANGES -> {
                         if (values.srcServer == null)
