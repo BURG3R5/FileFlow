@@ -22,7 +22,6 @@ jobs:
 
       - name: Build APKs
         run: |
-          chmod +x gradlew
           ./gradlew assembleRelease
           ./gradlew assembleReleaseWithNetwork
           mv app/build/outputs/apk/release/app-release-unsigned.apk FileFlow_${{ github.ref_name }}.apk
