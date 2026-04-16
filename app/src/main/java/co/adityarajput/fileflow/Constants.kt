@@ -25,4 +25,6 @@ object Constants {
      * There *is* a `ShortcutManagerCompat.getMaxShortcutCountPerActivity` method, but it *lies*.
      */
     const val MAX_SHORTCUTS = 4
+
+    val MEDIA_PREFIXES = listOf("image/", "video/", "audio/")
 }

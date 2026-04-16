@@ -22,6 +22,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import net.schmizz.sshj.sftp.RemoteResourceInfo
 import java.io.BufferedOutputStream
+import java.net.URLConnection
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.zip.ZipEntry
@@ -270,7 +271,12 @@ sealed class RemoteAction : Action() {
             if (destServer == null) {
                 MediaScannerConnection.scanFile(
                     context,
-                    destLocalPaths.filterNotNull().distinct().toTypedArray(),
+                    destLocalPaths.filter { path ->
+                        path != null && Constants.MEDIA_PREFIXES.any {
+                            URLConnection.guessContentTypeFromName(path)
+                                .startsWith(it)
+                        }
+                    }.distinct().toTypedArray(),
                     null,
                 ) { path, _ -> Logger.d("RemoteAction", "Scanned media at $path") }
             } else if (!keepOriginal) {
