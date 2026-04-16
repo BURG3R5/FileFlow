@@ -797,7 +797,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 },
                 Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.package_name)) },
-                placeholder = { Text(stringResource(R.string.pattern_placeholder)) },
+                placeholder = { Text(stringResource(R.string.package_placeholder)) },
                 colors = textFieldColors,
             )
             OutlinedTextField(
