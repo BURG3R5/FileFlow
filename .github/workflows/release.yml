@@ -25,7 +25,7 @@ jobs:
           ./gradlew assembleRelease
           ./gradlew assembleReleaseWithNetwork
           mv app/build/outputs/apk/release/app-release-unsigned.apk FileFlow_${{ github.ref_name }}.apk
-          mv app/build/outputs/apk/releaseWithNetwork/app-releaseWithNetwork-unsigned.apk FileFlow_network_${{ github.ref_name }}.apk
+          mv app/build/outputs/apk/releaseWithNetwork/app-releaseWithNetwork-unsigned.apk FileFlow_with-network_${{ github.ref_name }}.apk
 
       - name: Sign APKs
         env:
@@ -34,7 +34,7 @@ jobs:
         run: |
           echo "${KEYSTORE}" | base64 -d > apksign.keystore
           ${ANDROID_HOME}/build-tools/34.0.0/apksigner sign --ks apksign.keystore --ks-pass env:SIGNING_STORE_PASSWORD "FileFlow_${{ github.ref_name }}.apk"
-          ${ANDROID_HOME}/build-tools/34.0.0/apksigner sign --ks apksign.keystore --ks-pass env:SIGNING_STORE_PASSWORD "FileFlow_network_${{ github.ref_name }}.apk"
+          ${ANDROID_HOME}/build-tools/34.0.0/apksigner sign --ks apksign.keystore --ks-pass env:SIGNING_STORE_PASSWORD "FileFlow_with-network_${{ github.ref_name }}.apk"
 
       - name: Create release
         uses: meeDamian/github-release@v2.0.3
@@ -44,4 +44,4 @@ jobs:
           gzip: folders
           files: >
             FileFlow_${{ github.ref_name }}.apk
-            FileFlow_network_${{ github.ref_name }}.apk
+            FileFlow_with-network_${{ github.ref_name }}.apk
