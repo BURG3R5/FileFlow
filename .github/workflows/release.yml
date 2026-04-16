@@ -27,7 +27,7 @@ jobs:
           mv app/build/outputs/apk/release/app-release-unsigned.apk FileFlow_${{ github.ref_name }}.apk
           mv app/build/outputs/apk/releaseWithNetwork/app-releaseWithNetwork-unsigned.apk FileFlow_network_${{ github.ref_name }}.apk
 
-      - name: Sign APK
+      - name: Sign APKs
         env:
           KEYSTORE: ${{ secrets.SIGNING_KEY }}
           SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
