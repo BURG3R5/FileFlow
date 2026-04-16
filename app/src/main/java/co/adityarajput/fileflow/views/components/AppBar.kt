@@ -20,10 +20,8 @@ fun AppBar(
             Text(
                 title,
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    fontSize = when {
-                        canNavigateBack -> MaterialTheme.typography.headlineMedium.fontSize
-                        else -> MaterialTheme.typography.headlineLarge.fontSize
-                    },
+                    fontSize = if (canNavigateBack) MaterialTheme.typography.headlineMedium.fontSize
+                    else MaterialTheme.typography.headlineLarge.fontSize,
                 ),
             )
         },

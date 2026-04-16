@@ -1,9 +1,10 @@
 package co.adityarajput.fileflow.data
 
-import co.adityarajput.fileflow.data.models.ALL_RULES
-import co.adityarajput.fileflow.data.models.Execution
-import co.adityarajput.fileflow.data.models.Group
-import co.adityarajput.fileflow.data.models.Rule
+import co.adityarajput.fileflow.data.daos.ExecutionDao
+import co.adityarajput.fileflow.data.daos.GroupDao
+import co.adityarajput.fileflow.data.daos.RuleDao
+import co.adityarajput.fileflow.data.daos.ServerDao
+import co.adityarajput.fileflow.data.models.*
 import co.adityarajput.fileflow.utils.Logger
 import kotlinx.coroutines.flow.first
 
@@ -11,12 +12,15 @@ class Repository(
     private val ruleDao: RuleDao,
     private val executionDao: ExecutionDao,
     private val groupDao: GroupDao,
+    private val serverDao: ServerDao,
 ) {
     suspend fun upsert(vararg rules: Rule) = ruleDao.upsert(*rules)
 
     suspend fun upsert(vararg executions: Execution) = executionDao.upsert(*executions)
 
     suspend fun upsert(vararg groups: Group) = groupDao.upsert(*groups)
+
+    suspend fun upsert(vararg servers: Server) = serverDao.upsert(*servers)
 
     fun rules() = ruleDao.list()
 
@@ -39,6 +43,8 @@ class Repository(
                 else rules.filter { it.id in group.ruleIds })
     }
 
+    fun servers() = serverDao.list()
+
     suspend fun registerExecution(rule: Rule, execution: Execution) {
         ruleDao.registerExecution(rule.id)
         executionDao.upsert(execution)
@@ -55,4 +61,6 @@ class Repository(
     suspend fun delete(rule: Rule) = ruleDao.delete(rule)
 
     suspend fun delete(group: Group) = groupDao.delete(group)
+
+    suspend fun delete(server: Server) = serverDao.delete(server)
 }

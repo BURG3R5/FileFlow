@@ -1,5 +1,5 @@
 [versions]
-aboutlibraries = "14.0.0-b03"
+aboutlibraries = "14.0.1"
 agp = "9.1.0"
 kotlin = "2.3.20"
 coreKtx = "1.18.0"
@@ -12,12 +12,14 @@ composeBom = "2026.02.00"
 appcompat = "1.7.1"
 navigationCompose = "2.9.7"
 room = "2.8.4"
-composeMaterial = "1.5.6"
-kotlinxSerializationJson = "1.10.0"
+composeMaterial = "1.6.1"
+kotlinxSerializationJson = "1.11.0"
 documentfile = "1.1.0"
 workRuntimeKtx = "2.11.2"
 ksp = "2.3.4"
 cron = "9.2.1"
+sshj = "0.40.0"
+tink = "1.21.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +48,8 @@ androidx-documentfile = { group = "androidx.documentfile", name = "documentfile"
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 aboutlibraries-compose = { group = "com.mikepenz", name = "aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
 cron-utils = { group = "com.cronutils", name = "cron-utils", version.ref = "cron" }
+sshj = { group = "com.hierynomus", name = "sshj", version.ref = "sshj" }
+google-crypto-tink = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
 
 [plugins]
 aboutlibraries-android = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutlibraries" }

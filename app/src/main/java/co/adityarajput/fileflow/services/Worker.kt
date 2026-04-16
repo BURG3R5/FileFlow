@@ -3,6 +3,7 @@ package co.adityarajput.fileflow.services
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import co.adityarajput.fileflow.Constants
 import co.adityarajput.fileflow.data.AppContainer
 import co.adityarajput.fileflow.data.models.Execution
 import co.adityarajput.fileflow.utils.Logger
@@ -12,7 +13,7 @@ class Worker(private val context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val repository = AppContainer(context).repository
-        val rule = repository.rule(inputData.getInt("ruleId", -1))
+        val rule = repository.rule(inputData.getInt(Constants.EXTRA_RULE_ID, -1))
 
         if (rule != null && rule.enabled) {
             if (rule.cronString != null) {

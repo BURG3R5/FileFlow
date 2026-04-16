@@ -10,6 +10,7 @@ import android.os.SystemClock
 import androidx.core.net.toUri
 import androidx.work.*
 import co.adityarajput.fileflow.AlarmReceiver
+import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants
 import co.adityarajput.fileflow.data.AppContainer
 import co.adityarajput.fileflow.data.models.Rule
@@ -19,6 +20,7 @@ import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
+@Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
 suspend fun Context.scheduleWork() {
     // INFO: Delete work scheduled by the old scheduling system
     WorkManager.getInstance(this).cancelUniqueWork(Constants.WORKER_NAME)
@@ -39,7 +41,14 @@ suspend fun Context.scheduleWork() {
                     TimeUnit.MILLISECONDS,
                     PeriodicWorkRequest.MIN_PERIODIC_FLEX_MILLIS,
                     TimeUnit.MILLISECONDS,
-                ).setInputData(workDataOf("ruleId" to it.id)).build(),
+                ).setInputData(workDataOf(Constants.EXTRA_RULE_ID to it.id)).apply {
+                    if (BuildConfig.HAS_NETWORK_FEATURE && it.action.isRemote)
+                        setConstraints(
+                            Constraints.Builder()
+                                .setRequiredNetworkType(NetworkType.CONNECTED)
+                                .build(),
+                        )
+                }.build(),
             )
         }
 }

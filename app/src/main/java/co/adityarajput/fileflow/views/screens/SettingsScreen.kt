@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.edit
+import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants.BRIGHTNESS
 import co.adityarajput.fileflow.Constants.SETTINGS
 import co.adityarajput.fileflow.R
@@ -42,6 +43,7 @@ private val permissions = listOf(
 @Composable
 fun SettingsScreen(
     goToGroupsScreen: () -> Unit = {},
+    goToServersScreen: () -> Unit = {},
     goToLicensesScreen: () -> Unit = {},
     goToAboutScreen: () -> Unit = {},
     goBack: () -> Unit = {},
@@ -194,24 +196,46 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(dimensionResource(R.dimen.padding_small)),
                 ) {
-                    Row(
+                    Column(
                         Modifier
                             .fillMaxWidth()
-                            .clickable { goToGroupsScreen() }
                             .padding(
                                 dimensionResource(R.dimen.padding_large),
                                 dimensionResource(R.dimen.padding_medium),
                             ),
-                        Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                        Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium)),
                     ) {
-                        Icon(
-                            painterResource(R.drawable.group),
-                            stringResource(R.string.groups),
-                        )
-                        Text(
-                            stringResource(R.string.manage_groups),
-                            fontWeight = FontWeight.Medium,
-                        )
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { goToGroupsScreen() },
+                            Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                        ) {
+                            Icon(
+                                painterResource(R.drawable.group),
+                                stringResource(R.string.groups),
+                            )
+                            Text(
+                                stringResource(R.string.manage_groups),
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                        if (BuildConfig.HAS_NETWORK_FEATURE)
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable { goToServersScreen() },
+                                Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                            ) {
+                                Icon(
+                                    painterResource(R.drawable.host),
+                                    stringResource(R.string.servers),
+                                )
+                                Text(
+                                    stringResource(R.string.manage_servers),
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
                     }
                 }
                 Card(

@@ -26,9 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
+import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.data.models.Action
+import co.adityarajput.fileflow.data.models.RemoteAction
 import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.viewmodels.*
 import co.adityarajput.fileflow.views.components.*
@@ -147,16 +149,17 @@ fun UpsertRuleScreen(
             }
         }
         if (viewModel.folderPickerState != null) FolderPickerBottomSheet(viewModel)
+        if (viewModel.remoteFolderPickerState != null) RemoteFolderPickerBottomSheet(viewModel)
     }
 }
 
+@Suppress("KotlinConstantConditions")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     val context = LocalContext.current
     val shouldUseCustomPicker = remember { context.isGranted(Permission.MANAGE_EXTERNAL_STORAGE) }
-
-    var superlativeDropdownExpanded by remember { mutableStateOf(false) }
+    val isRemoteAction = viewModel.state.values.isRemoteAction
 
     val srcPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree(),
@@ -178,7 +181,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.Normal,
     )
-    Action.entries.forEach {
+    (if (!viewModel.state.values.isRemoteAction) Action.entries else RemoteAction.entries).forEach {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -202,21 +205,97 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
             )
         }
     }
+    if (BuildConfig.HAS_NETWORK_FEATURE) {
+        Row(
+            Modifier.toggleable(isRemoteAction) {
+                viewModel.updateForm(
+                    context,
+                    viewModel.state.values.copy(
+                        isRemoteAction = it,
+                        actionBase = viewModel.state.values.actionBase.counterBase,
+                    ),
+                )
+            },
+            Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+            Alignment.CenterVertically,
+        ) {
+            Checkbox(isRemoteAction, null)
+            Text(
+                stringResource(R.string.enable_remote),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Normal,
+            )
+        }
+        AnimatedVisibility(isRemoteAction) {
+            var srcServerDropdownExpanded by remember { mutableStateOf(false) }
+
+            Box {
+                Text(
+                    buildAnnotatedString {
+                        append(stringResource(R.string.source_device))
+                        withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
+                            append(
+                                viewModel.state.values.srcServer?.host
+                                    ?: stringResource(R.string.this_device),
+                            )
+                        }
+                    },
+                    Modifier.clickable { srcServerDropdownExpanded = true },
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Normal,
+                )
+                DropdownMenu(srcServerDropdownExpanded, { srcServerDropdownExpanded = false }) {
+                    DropdownMenuItem(
+                        { Text(stringResource(R.string.this_device)) },
+                        {
+                            viewModel.updateForm(
+                                context,
+                                viewModel.state.values.copy(srcServer = null),
+                            )
+                            srcServerDropdownExpanded = false
+                        },
+                    )
+                    viewModel.servers.forEach {
+                        DropdownMenuItem(
+                            { Text(it.host) },
+                            {
+                                viewModel.updateForm(
+                                    context,
+                                    viewModel.state.values.copy(srcServer = it),
+                                )
+                                srcServerDropdownExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
     Text(
         buildAnnotatedString {
             append(stringResource(R.string.source))
             withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
                 append(
-                    viewModel.state.values.src.getGetDirectoryFromUri()
-                        .ifBlank { stringResource(R.string.select_folder) },
+                    viewModel.state.values.src.let {
+                        if (viewModel.state.values.srcServer == null)
+                            it.getDirectoryFromUri() else it
+                    }.ifBlank { stringResource(R.string.select_folder) },
                 )
             }
         },
         Modifier
             .fillMaxWidth()
             .clickable {
-                if (shouldUseCustomPicker) viewModel.folderPickerState = FolderPickerState.SRC
-                else srcPicker.launch(null)
+                when {
+                    viewModel.state.values.srcServer != null ->
+                        viewModel.remoteFolderPickerState = RemoteFolderPickerState.SRC
+
+                    shouldUseCustomPicker ->
+                        viewModel.folderPickerState = FolderPickerState.SRC
+
+                    else ->
+                        srcPicker.launch(null)
+                }
             },
         style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.Normal,
@@ -258,7 +337,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         colors = textFieldColors,
     )
     when (viewModel.state.values.actionBase) {
-        is Action.MOVE -> {
+        is Action.MOVE, is RemoteAction.MOVE -> {
             Row(
                 Modifier.toggleable(!viewModel.state.values.keepOriginal) {
                     viewModel.updateForm(context, viewModel.state.values.copy(keepOriginal = !it))
@@ -273,6 +352,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                     fontWeight = FontWeight.Normal,
                 )
             }
+            var superlativeDropdownExpanded by remember { mutableStateOf(false) }
             Box {
                 Text(
                     buildAnnotatedString {
@@ -305,22 +385,80 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 stringResource(R.string.arrow_down),
                 Modifier.align(Alignment.CenterHorizontally),
             )
+            if (BuildConfig.HAS_NETWORK_FEATURE) {
+                AnimatedVisibility(isRemoteAction) {
+                    var destServerDropdownExpanded by remember { mutableStateOf(false) }
+
+                    Box {
+                        Text(
+                            buildAnnotatedString {
+                                append(stringResource(R.string.destination_device))
+                                withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
+                                    append(
+                                        viewModel.state.values.destServer?.host
+                                            ?: stringResource(R.string.this_device),
+                                    )
+                                }
+                            },
+                            Modifier.clickable { destServerDropdownExpanded = true },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Normal,
+                        )
+                        DropdownMenu(
+                            destServerDropdownExpanded,
+                            { destServerDropdownExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                { Text(stringResource(R.string.this_device)) },
+                                {
+                                    viewModel.updateForm(
+                                        context,
+                                        viewModel.state.values.copy(destServer = null),
+                                    )
+                                    destServerDropdownExpanded = false
+                                },
+                            )
+                            viewModel.servers.forEach {
+                                DropdownMenuItem(
+                                    { Text(it.host) },
+                                    {
+                                        viewModel.updateForm(
+                                            context,
+                                            viewModel.state.values.copy(destServer = it),
+                                        )
+                                        destServerDropdownExpanded = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
             Text(
                 buildAnnotatedString {
                     append(stringResource(R.string.destination))
                     withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
                         append(
-                            viewModel.state.values.dest.getGetDirectoryFromUri()
-                                .ifBlank { stringResource(R.string.select_folder) },
+                            viewModel.state.values.dest.let {
+                                if (viewModel.state.values.destServer == null)
+                                    it.getDirectoryFromUri() else it
+                            }.ifBlank { stringResource(R.string.select_folder) },
                         )
                     }
                 },
                 Modifier
                     .fillMaxWidth()
                     .clickable {
-                        if (shouldUseCustomPicker) viewModel.folderPickerState =
-                            FolderPickerState.DEST
-                        else destPicker.launch(null)
+                        when {
+                            viewModel.state.values.destServer != null ->
+                                viewModel.remoteFolderPickerState = RemoteFolderPickerState.DEST
+
+                            shouldUseCustomPicker ->
+                                viewModel.folderPickerState = FolderPickerState.DEST
+
+                            else ->
+                                destPicker.launch(null)
+                        }
                     },
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Normal,
@@ -410,7 +548,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
             }
         }
 
-        is Action.DELETE_STALE -> {
+        is Action.DELETE_STALE, is RemoteAction.DELETE_STALE -> {
             OutlinedTextField(
                 viewModel.state.values.retentionDays.toString(),
                 {
@@ -430,28 +568,86 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
             )
         }
 
-        is Action.ZIP -> {
+        is Action.ZIP, is RemoteAction.ZIP -> {
             Icon(
                 painterResource(R.drawable.arrow_down),
                 stringResource(R.string.arrow_down),
                 Modifier.align(Alignment.CenterHorizontally),
             )
+            if (BuildConfig.HAS_NETWORK_FEATURE) {
+                AnimatedVisibility(isRemoteAction) {
+                    var destServerDropdownExpanded by remember { mutableStateOf(false) }
+
+                    Box {
+                        Text(
+                            buildAnnotatedString {
+                                append(stringResource(R.string.destination_device))
+                                withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
+                                    append(
+                                        viewModel.state.values.destServer?.host
+                                            ?: stringResource(R.string.this_device),
+                                    )
+                                }
+                            },
+                            Modifier.clickable { destServerDropdownExpanded = true },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Normal,
+                        )
+                        DropdownMenu(
+                            destServerDropdownExpanded,
+                            { destServerDropdownExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                { Text(stringResource(R.string.this_device)) },
+                                {
+                                    viewModel.updateForm(
+                                        context,
+                                        viewModel.state.values.copy(destServer = null),
+                                    )
+                                    destServerDropdownExpanded = false
+                                },
+                            )
+                            viewModel.servers.forEach {
+                                DropdownMenuItem(
+                                    { Text(it.host) },
+                                    {
+                                        viewModel.updateForm(
+                                            context,
+                                            viewModel.state.values.copy(destServer = it),
+                                        )
+                                        destServerDropdownExpanded = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
             Text(
                 buildAnnotatedString {
                     append(stringResource(R.string.destination))
                     withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
                         append(
-                            viewModel.state.values.dest.getGetDirectoryFromUri()
-                                .ifBlank { stringResource(R.string.select_folder) },
+                            viewModel.state.values.dest.let {
+                                if (viewModel.state.values.destServer == null)
+                                    it.getDirectoryFromUri() else it
+                            }.ifBlank { stringResource(R.string.select_folder) },
                         )
                     }
                 },
                 Modifier
                     .fillMaxWidth()
                     .clickable {
-                        if (shouldUseCustomPicker) viewModel.folderPickerState =
-                            FolderPickerState.DEST
-                        else destPicker.launch(null)
+                        when {
+                            viewModel.state.values.destServer != null ->
+                                viewModel.remoteFolderPickerState = RemoteFolderPickerState.DEST
+
+                            shouldUseCustomPicker ->
+                                viewModel.folderPickerState = FolderPickerState.DEST
+
+                            else ->
+                                destPicker.launch(null)
+                        }
                     },
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Normal,
@@ -518,7 +714,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
             }
         }
 
-        is Action.EMIT_CHANGES -> {
+        is Action.EMIT_CHANGES, is RemoteAction.EMIT_CHANGES -> {
             var unit by remember { mutableStateOf(TimeUnit.MINUTES) }
             var dropdownExpanded by remember { mutableStateOf(false) }
             val displayValue = (viewModel.state.values.modifiedWithin / unit.inMillis).toInt()
@@ -632,6 +828,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     else if (viewModel.state.error == RuleFormError.INVALID_TEMPLATE) ErrorText(R.string.invalid_template)
     else if (viewModel.state.error == RuleFormError.MUST_END_IN_ZIP) ErrorText(R.string.must_end_in_zip)
     else if (viewModel.state.error == RuleFormError.INVALID_JSON) ErrorText(R.string.invalid_json)
+    else if (viewModel.state.error == RuleFormError.REMOTE_ACTION_WITHOUT_SERVER) ErrorText(R.string.remote_action_without_servers)
     else if (viewModel.state.warning == RuleFormWarning.NO_MATCHES_IN_SRC) WarningText(R.string.pattern_doesnt_match_src_files)
 }
 

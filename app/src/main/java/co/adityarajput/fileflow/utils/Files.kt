@@ -6,9 +6,12 @@ import android.os.Environment
 import android.os.storage.StorageManager
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import co.adityarajput.fileflow.data.models.RemoteAction
 import co.adityarajput.fileflow.data.models.Rule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.InputStream
+import java.io.OutputStream
 import java.net.URLDecoder
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
@@ -19,14 +22,14 @@ sealed class File {
     companion object {
         fun fromPath(context: Context, path: String): File? {
             try {
-                if (context.isGranted(Permission.MANAGE_EXTERNAL_STORAGE)) {
-                    val ioFile = IOFile(path)
-                    if (ioFile.exists())
-                        return FSFile(ioFile)
+                return if (context.isGranted(Permission.MANAGE_EXTERNAL_STORAGE)) {
+                    IOFile(path).let {
+                        if (it.exists()) FSFile(it) else null
+                    }
                 } else {
-                    val docFile = DocumentFile.fromTreeUri(context, path.toUri())
-                    if (docFile != null && docFile.exists())
-                        return SAFFile(docFile)
+                    DocumentFile.fromTreeUri(context, path.toUri())?.let {
+                        if (it.exists()) SAFFile(it) else null
+                    }
                 }
             } catch (e: Exception) {
                 Logger.e("Files", "Error while creating file from path: $path", e)
@@ -37,6 +40,67 @@ sealed class File {
     }
 
     class SAFFile(val documentFile: DocumentFile) : File() {
+        override val name get() = documentFile.name
+
+        override val extension get() = documentFile.name?.substringAfterLast('.', "").orEmpty()
+
+        override val path get() = documentFile.uri.toString()
+
+        override val isFile get() = documentFile.isFile
+
+        override val isDirectory get() = documentFile.isDirectory
+
+        override val parent get() = documentFile.parentFile?.let { SAFFile(it) }
+
+        override val lastModified get() = documentFile.lastModified()
+
+        override val length get() = documentFile.length()
+
+        override fun isIdenticalTo(other: File, context: Context): Boolean {
+            if (other !is SAFFile) return false
+
+            this.getInputStream(context).use { src ->
+                other.getInputStream(context).use { dest ->
+                    if (src == null || dest == null) {
+                        Logger.e("Files", "Failed to open file(s)")
+                        return false
+                    }
+                    return src.readBytes().contentEquals(dest.readBytes())
+                }
+            }
+        }
+
+        override fun listDirectChildren() =
+            documentFile.listFiles().map { SAFFile(it) }
+
+        override fun createFile(name: String, mimeType: String) =
+            documentFile.createFile(mimeType, name)?.let { SAFFile(it) }
+
+        override fun createDirectory(relativePath: String): File? {
+            val parts = relativePath.split('/').filter { it.isNotBlank() }
+            var currentDir: DocumentFile = documentFile
+
+            for (part in parts) {
+                val nextDir = currentDir.findFile(part)
+                    ?: currentDir.createDirectory(part)
+
+                if (nextDir == null) {
+                    Logger.e("Files", "Failed to create directory: $part")
+                    return null
+                }
+
+                currentDir = nextDir
+            }
+
+            return SAFFile(currentDir)
+        }
+
+        override fun getInputStream(context: Context) =
+            context.contentResolver.openInputStream(documentFile.uri)
+
+        override fun getOutputStream(context: Context) =
+            context.contentResolver.openOutputStream(documentFile.uri)
+
         override suspend fun moveTo(
             destDir: File,
             destFileName: String,
@@ -53,7 +117,10 @@ sealed class File {
             }
 
             val destFile =
-                destDir.documentFile.createFile(type ?: "application/octet-stream", destFileName)!!
+                destDir.documentFile.createFile(
+                    documentFile.type ?: "application/octet-stream",
+                    destFileName,
+                )!!
 
             val resolver = context.contentResolver
             resolver.openInputStream(this.documentFile.uri).use { srcStream ->
@@ -66,9 +133,46 @@ sealed class File {
 
             return null
         }
+
+        override fun delete() = documentFile.delete()
     }
 
     class FSFile(val ioFile: IOFile) : File() {
+        override val name: String? get() = ioFile.name
+
+        override val extension get() = ioFile.extension
+
+        override val path: String get() = ioFile.absolutePath
+
+        override val isFile get() = ioFile.isFile
+
+        override val isDirectory get() = ioFile.isDirectory
+
+        override val parent: File? get() = ioFile.parentFile?.let { FSFile(it) }
+
+        override val lastModified get() = ioFile.lastModified()
+
+        override val length get() = ioFile.length()
+
+        override fun getInputStream(context: Context) = ioFile.inputStream()
+
+        override fun getOutputStream(context: Context) = ioFile.outputStream()
+
+        override fun isIdenticalTo(other: File, context: Context) =
+            other is FSFile && ioFile.readBytes().contentEquals(other.ioFile.readBytes())
+
+        override fun listDirectChildren() = ioFile.listFiles()?.map { FSFile(it) }.orEmpty()
+
+        override fun createFile(name: String, mimeType: String) =
+            IOFile(ioFile, name).let {
+                if (it.createNewFile()) FSFile(it) else null
+            }
+
+        override fun createDirectory(relativePath: String) =
+            IOFile(ioFile.path + '/' + relativePath).let {
+                if (it.exists() || it.mkdirs()) FSFile(it) else null
+            }
+
         override suspend fun moveTo(
             destDir: File,
             destFileName: String,
@@ -128,64 +232,30 @@ sealed class File {
 
             return destFilePath
         }
+
+        override fun delete() = ioFile.delete()
     }
 
-    val extension
-        get() = when (this) {
-            is SAFFile -> documentFile.name?.substringAfterLast('.', "").orEmpty()
-            is FSFile -> ioFile.extension
-        }
+    abstract val name: String?
 
-    val name
-        get() = when (this) {
-            is SAFFile -> documentFile.name
-            is FSFile -> ioFile.name
-        }
+    abstract val extension: String
 
-    val path: String
-        get() = when (this) {
-            is SAFFile -> documentFile.uri.toString()
-            is FSFile -> ioFile.absolutePath
-        }
+    abstract val path: String
 
-    val parent
-        get() = when (this) {
-            is SAFFile -> documentFile.parentFile?.let { SAFFile(it) }
-            is FSFile -> ioFile.parentFile?.let { FSFile(it) }
-        }
+    abstract val isFile: Boolean
 
-    val isFile
-        get() = when (this) {
-            is SAFFile -> documentFile.isFile
-            is FSFile -> ioFile.isFile
-        }
+    abstract val isDirectory: Boolean
 
-    val isDirectory
-        get() = when (this) {
-            is SAFFile -> documentFile.isDirectory
-            is FSFile -> ioFile.isDirectory
-        }
+    abstract val parent: File?
 
-    val type
-        get() = when (this) {
-            is SAFFile -> documentFile.type
-            is FSFile -> null
-        }
+    abstract val lastModified: Long
 
-    fun lastModified() = when (this) {
-        is SAFFile -> documentFile.lastModified()
-        is FSFile -> ioFile.lastModified()
-    }
-
-    fun length() = when (this) {
-        is SAFFile -> documentFile.length()
-        is FSFile -> ioFile.length()
-    }
+    abstract val length: Long
 
     fun pathRelativeTo(basePath: String): String? =
         if (isDirectory) {
-            path.getGetDirectoryFromUri()
-                .substringAfter(basePath.getGetDirectoryFromUri(), "")
+            path.getDirectoryFromUri()
+                .substringAfter(basePath.getDirectoryFromUri(), "")
                 .ifBlank { null }
         } else {
             parent?.pathRelativeTo(basePath)
@@ -196,88 +266,30 @@ sealed class File {
                 }
         }
 
+    abstract fun isIdenticalTo(other: File, context: Context): Boolean
+
+    abstract fun listDirectChildren(): List<File>
+
     fun listChildren(recurse: Boolean): List<File> {
         if (!isDirectory) return emptyList()
 
-        if (!recurse) {
-            return when (this) {
-                is SAFFile -> documentFile.listFiles().map { SAFFile(it) }
-                is FSFile -> ioFile.listFiles()?.map { FSFile(it) }.orEmpty()
-            }
-        }
+        if (!recurse) return listDirectChildren()
 
         val files = mutableListOf<File>()
-        listChildren(false).forEach {
+        listDirectChildren().forEach {
             files.add(it)
             files.addAll(it.listChildren(true))
         }
         return files
     }
 
-    fun isIdenticalTo(other: File, context: Context): Boolean {
-        if (this is FSFile && other is FSFile) {
-            return ioFile.readBytes().contentEquals(other.ioFile.readBytes())
-        } else if (this is SAFFile && other is SAFFile) {
-            this.getInputStream(context).use { src ->
-                other.getInputStream(context).use { dest ->
-                    if (src == null || dest == null) {
-                        Logger.e("Files", "Failed to open file(s)")
-                        return false
-                    }
-                    return src.readBytes().contentEquals(dest.readBytes())
-                }
-            }
-        }
+    abstract fun createFile(name: String, mimeType: String): File?
 
-        return false
-    }
+    abstract fun createDirectory(relativePath: String): File?
 
-    fun createFile(name: String, mimeType: String) = when (this) {
-        is SAFFile -> documentFile.createFile(mimeType, name)?.let { SAFFile(it) }
+    abstract fun getInputStream(context: Context): InputStream?
 
-        is FSFile -> IOFile(ioFile, name).let {
-            if (it.createNewFile()) FSFile(it) else null
-        }
-    }
-
-    fun createDirectory(relativePath: String): File? {
-        return when (this) {
-            is SAFFile -> {
-                val parts = relativePath.split('/').filter { it.isNotBlank() }
-                var currentDir: DocumentFile = documentFile
-
-                for (part in parts) {
-                    val nextDir = currentDir.findFile(part)
-                        ?: currentDir.createDirectory(part)
-
-                    if (nextDir == null) {
-                        Logger.e("Files", "Failed to create directory: $part")
-                        return null
-                    }
-
-                    currentDir = nextDir
-                }
-
-                SAFFile(currentDir)
-            }
-
-            is FSFile -> IOFile(ioFile.path + '/' + relativePath).let {
-                if (it.exists() || it.mkdirs()) FSFile(it) else null
-            }
-        }
-    }
-
-    fun getInputStream(context: Context) = when (this) {
-        is SAFFile -> context.contentResolver.openInputStream(documentFile.uri)
-
-        is FSFile -> ioFile.inputStream()
-    }
-
-    fun getOutputStream(context: Context) = when (this) {
-        is SAFFile -> context.contentResolver.openOutputStream(documentFile.uri)
-
-        is FSFile -> ioFile.outputStream()
-    }
+    abstract fun getOutputStream(context: Context): OutputStream?
 
     abstract suspend fun moveTo(
         destDir: File,
@@ -287,13 +299,10 @@ sealed class File {
         context: Context,
     ): String?
 
-    fun delete() = when (this) {
-        is SAFFile -> documentFile.delete()
-        is FSFile -> ioFile.delete()
-    }
+    abstract fun delete(): Boolean
 }
 
-fun String.getGetDirectoryFromUri() =
+fun String.getDirectoryFromUri() =
     if (isBlank()) {
         this
     } else if (this.contains(':')) {
@@ -306,7 +315,10 @@ fun String.getGetDirectoryFromUri() =
     }
 
 fun Context.findRulesToBeMigrated(rules: List<Rule>) =
-    rules.filter { File.fromPath(this, it.action.src) == null }
+    rules.filter {
+        ((it.action as? RemoteAction)?.srcServer == null)
+                && File.fromPath(this, it.action.src) == null
+    }
 
 fun Context.getAllStorages(): List<IOFile> {
     val storages = mutableListOf<IOFile>()
