@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.edit
 import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants.BRIGHTNESS
+import co.adityarajput.fileflow.Constants.ENABLE_RULE_NAMES
 import co.adityarajput.fileflow.Constants.SETTINGS
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.utils.Logger
@@ -40,6 +41,7 @@ private val permissions = listOf(
     Permission.MANAGE_EXTERNAL_STORAGE,
 )
 
+@Suppress("KotlinConstantConditions")
 @Composable
 fun SettingsScreen(
     goToGroupsScreen: () -> Unit = {},
@@ -67,6 +69,10 @@ fun SettingsScreen(
     DisposableEffect(Unit) {
         handler.post(watcher)
         onDispose { handler.removeCallbacksAndMessages(null) }
+    }
+
+    var enableRuleNames by remember {
+        mutableStateOf(sharedPreferences.getBoolean(ENABLE_RULE_NAMES, false))
     }
 
     Scaffold(
@@ -138,6 +144,29 @@ fun SettingsScreen(
                             Switch(
                                 hasPermissions.getValue(Permission.MANAGE_EXTERNAL_STORAGE),
                                 { context.request(Permission.MANAGE_EXTERNAL_STORAGE) },
+                            )
+                        }
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                            Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.enable_rule_names),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    stringResource(R.string.explain_enable_rule_names),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            Switch(
+                                enableRuleNames,
+                                {
+                                    sharedPreferences.edit { putBoolean(ENABLE_RULE_NAMES, it) }
+                                    enableRuleNames = it
+                                },
                             )
                         }
                     }

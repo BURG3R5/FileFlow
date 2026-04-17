@@ -110,6 +110,8 @@
     <string name="explain_disabling_battery_optimization">Exempts the app from being restricted by the OS</string>
     <string name="all_files_access">All files access</string>
     <string name="explain_all_files_access">Lets flows target protected folders</string>
+    <string name="enable_rule_names">Enable rule names</string>
+    <string name="explain_enable_rule_names">Adds a \"name\" field to rules</string>
     <string name="settings_section_2">App Appearance</string>
     <string name="app_theme">App Theme</string>
     <string name="light">Light</string>
@@ -137,7 +139,6 @@
     <string name="all_rules">All rules, current and future</string>
     <string name="some_rules">Some rules</string>
     <string name="no_rules_while_grouping">No rules added.\nPlease create some rules first.</string>
-    <string name="added_to_group">Added to group</string>
     <!-- endregion -->
 
     <!-- region UpsertRuleScreen -->
@@ -146,12 +147,13 @@
     <string name="add">Add</string>
     <string name="save">Save</string>
     <string name="next">Next</string>
+    <string name="rule_name">Rule name</string>
+    <string name="rule_name_placeholder">A short label for this rule</string>
     <string name="action">Action:</string>
     <string name="enable_remote">Enable remote capabilities for this rule?</string>
     <string name="source_device">"Source device: "</string>
     <string name="this_device">this device</string>
     <string name="source">"Source: "</string>
-    <string name="source_folder">Source folder</string>
     <string name="select_folder">select folder</string>
     <string name="scan_subdirectories">Scan subfolders</string>
     <string name="file_name_pattern">File name pattern</string>
@@ -163,7 +165,6 @@
     <string name="choose_superlative">"In case of multiple matches, choose: "</string>
     <string name="arrow_down">An arrow pointing downward</string>
     <string name="destination_device">"Destination device: "</string>
-    <string name="destination_folder">Destination folder</string>
     <string name="destination">"Destination: "</string>
     <string name="preserve_structure">Recreate source folder-structure in destination</string>
     <string name="file_name_template">File name template</string>
@@ -188,11 +189,12 @@
     <string name="modified_within">Modified within</string>
     <string name="pattern_advice"><![CDATA[Click <a href=\"https://github.com/BURG3R5/FileFlow/wiki/Examples\">here↗</a> for example patterns and templates.]]></string>
     <string name="invalid_regex">Regex pattern contains errors</string>
-    <string name="cannot_predict_dest_names">Cannot predict destination file names</string>
     <string name="must_end_in_zip">Archive must have extension \".zip\"</string>
     <string name="invalid_json">JSON contains errors</string>
     <string name="remote_action_without_servers">"Remote capabilities are enabled but servers aren't utilized"</string>
     <string name="pattern_doesnt_match_src_files">"Regex pattern doesn't match any file in the source folder"</string>
+    <string name="cannot_predict_dest_names">Cannot predict destination file names</string>
+    <string name="rule_name_not_provided">Rule name not provided</string>
     <string name="schedule">Schedule:</string>
     <string name="never">Never</string>
     <string name="periodic">Periodic</string>

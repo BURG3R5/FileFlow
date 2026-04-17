@@ -1,7 +1,6 @@
 package co.adityarajput.fileflow.data.models
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.room.ColumnInfo
@@ -27,20 +26,26 @@ data class Rule(
     @ColumnInfo(defaultValue = "NULL")
     val cronString: String? = null,
 
+    @ColumnInfo(defaultValue = "NULL")
+    val name: String? = null,
+
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 ) {
     @Composable
-    fun getDescription(): AnnotatedString {
-        return action.getDescription() + buildAnnotatedString {
-            if (interval != null) {
-                withStyle(dullStyle) { append("\nevery ") }
-                append(interval.toAccurateHumanReadableTime())
-            }
-            if (cronString != null) {
-                withStyle(dullStyle) { append("\nwhen ") }
-                append(cronString)
-            }
+    fun getDescription() = buildAnnotatedString {
+        if (name != null)
+            append(action.srcFileNamePattern + "\n")
+
+        append(action.getDescription())
+
+        if (interval != null) {
+            withStyle(dullStyle) { append("\nevery ") }
+            append(interval.toAccurateHumanReadableTime())
+        }
+        if (cronString != null) {
+            withStyle(dullStyle) { append("\nwhen ") }
+            append(cronString)
         }
     }
 }

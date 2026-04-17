@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import co.adityarajput.fileflow.R
@@ -39,23 +38,7 @@ fun ImproperRulesetDialog(
                         .verticalScroll(rememberScrollState()),
                 ) {
                     rulesToBeMigrated.forEach {
-                        Tile(
-                            it.action.srcFileNamePattern,
-                            stringResource(it.action.verb.forRules),
-                            if (!it.enabled) stringResource(R.string.disabled)
-                            else pluralStringResource(
-                                R.plurals.execution,
-                                it.executions,
-                                it.executions,
-                            ),
-                            {
-                                Text(
-                                    it.getDescription(),
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
-                            },
-                            { goToUpsertRuleScreen(Json.encodeToString(it)) },
-                        )
+                        it.Tile(onClick = { goToUpsertRuleScreen(Json.encodeToString(it)) })
                     }
                 }
             }
