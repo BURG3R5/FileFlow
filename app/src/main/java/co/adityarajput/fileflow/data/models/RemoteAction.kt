@@ -90,13 +90,9 @@ sealed class RemoteAction : Action() {
         fun getDestFileName(srcFile: File) =
             srcFile.name!!.replace(
                 Regex(srcFileNamePattern),
-                destFileNameTemplate.applyCustomReplacements().replace(
-                    $$"${folder}",
-                    srcFile.parent?.name ?: "",
-                ).replace(
-                    $$"${extension}",
-                    srcFile.extension,
-                ),
+                destFileNameTemplate
+                    .applyCustomReplacements()
+                    .applyCustomFileReplacements(srcFile),
             )
 
         @OptIn(ExperimentalPathApi::class)

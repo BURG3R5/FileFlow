@@ -67,3 +67,21 @@ fun String.applyCustomReplacements() = this
             ZonedDateTime.now().format(DateTimeFormatter.ofPattern(result.groupValues[1]))
         },
     )
+
+fun String.applyCustomFileReplacements(srcFile: File) = this
+    .replace(
+        $$"${folder}",
+        srcFile.parent?.name ?: "",
+    ).replace(
+        $$"${extension}",
+        srcFile.extension,
+    ).replace(
+        Regex("\\$\\{path:([^}]+)\\}"),
+        { result ->
+            srcFile.parent?.path?.getDirectoryFromUri()
+                ?.split("/")
+                ?.filter { it.isNotEmpty() }
+                ?.joinToString(result.groupValues[1])
+                ?: ""
+        },
+    )

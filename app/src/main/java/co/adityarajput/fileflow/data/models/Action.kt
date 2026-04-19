@@ -99,13 +99,9 @@ sealed class Action {
         fun getDestFileName(srcFile: File) =
             srcFile.name!!.replace(
                 Regex(srcFileNamePattern),
-                destFileNameTemplate.applyCustomReplacements().replace(
-                    $$"${folder}",
-                    srcFile.parent?.name ?: "",
-                ).replace(
-                    $$"${extension}",
-                    srcFile.extension,
-                ),
+                destFileNameTemplate
+                    .applyCustomReplacements()
+                    .applyCustomFileReplacements(srcFile),
             )
 
         override suspend fun execute(
