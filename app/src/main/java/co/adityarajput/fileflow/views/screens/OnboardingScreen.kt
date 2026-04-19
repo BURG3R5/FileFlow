@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.utils.Permission
 import co.adityarajput.fileflow.utils.isGranted
@@ -21,6 +22,7 @@ private val permissions = listOf(
     Permission.MANAGE_EXTERNAL_STORAGE,
 )
 
+@Suppress("KotlinConstantConditions")
 @Composable
 fun OnboardingScreen(goToRulesScreen: () -> Unit = {}) {
     val context = LocalContext.current
@@ -68,7 +70,12 @@ fun OnboardingScreen(goToRulesScreen: () -> Unit = {}) {
                         Text(stringResource(R.string.skip))
                     }
                 } else if (!hasPermissions.getValue(Permission.MANAGE_EXTERNAL_STORAGE)) {
-                    Text(stringResource(R.string.onboarding_info_2))
+                    Text(
+                        if (BuildConfig.HAS_NETWORK_FEATURE)
+                            stringResource(R.string.onboarding_info_2_with_network)
+                        else
+                            stringResource(R.string.onboarding_info_2_without_network),
+                    )
                     Button(
                         { context.request(Permission.MANAGE_EXTERNAL_STORAGE) },
                         Modifier.padding(top = dimensionResource(R.dimen.padding_large)),

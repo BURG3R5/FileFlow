@@ -20,6 +20,7 @@ import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.views.components.AppBar
 
+@Suppress("KotlinConstantConditions")
 @Composable
 fun AboutScreen(goBack: () -> Unit) {
     Scaffold(topBar = { AppBar(stringResource(R.string.about), true, goBack) }) { paddingValues ->
@@ -86,7 +87,12 @@ fun AboutScreen(goBack: () -> Unit) {
                 }
                 AboutCard {
                     Text(
-                        AnnotatedString.fromHtml(stringResource(R.string.app_permissions)),
+                        AnnotatedString.fromHtml(
+                            if (BuildConfig.HAS_NETWORK_FEATURE)
+                                stringResource(R.string.app_permissions_with_network)
+                            else
+                                stringResource(R.string.app_permissions_without_network),
+                        ),
                         Modifier.padding(dimensionResource(R.dimen.padding_large)),
                         style = MaterialTheme.typography.bodyMedium,
                     )
