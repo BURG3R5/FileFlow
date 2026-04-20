@@ -3,7 +3,6 @@ package co.adityarajput.fileflow
 import android.app.Application
 import co.adityarajput.fileflow.data.AppContainer
 import co.adityarajput.fileflow.utils.Crypto
-import co.adityarajput.fileflow.utils.isDebugBuild
 import co.adityarajput.fileflow.utils.scheduleWork
 import co.adityarajput.fileflow.utils.upsertShortcuts
 import kotlinx.coroutines.CoroutineScope
@@ -47,7 +46,7 @@ class FileFlowApplication : Application() {
         container = AppContainer(this)
 
         // INFO: While debugging, populate database with demo data for screenshots
-        if (isDebugBuild()) {
+        if (BuildConfig.DEBUG) {
             container.seedDemoData()
         }
 
