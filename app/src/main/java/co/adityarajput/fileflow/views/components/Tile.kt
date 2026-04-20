@@ -11,8 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import co.adityarajput.fileflow.R
+import co.adityarajput.fileflow.data.models.Execution
+import co.adityarajput.fileflow.data.models.Group
+import co.adityarajput.fileflow.data.models.Rule
+import co.adityarajput.fileflow.utils.toShortHumanReadableTime
 
 @Composable
 fun Tile(
@@ -74,3 +81,48 @@ fun Tile(
         }
     }
 }
+
+@Composable
+fun Rule.Tile(
+    expanded: Boolean = false,
+    showExecutions: Boolean = true,
+    onClick: () -> Unit = {},
+    buttons: @Composable RowScope.() -> Unit = {},
+) = Tile(
+    name ?: action.srcFileNamePattern, stringResource(action.verb.forRules),
+    if (!showExecutions) null
+    else if (!enabled) stringResource(R.string.disabled)
+    else pluralStringResource(R.plurals.execution, executions, executions),
+    { Text(getDescription(), style = MaterialTheme.typography.bodySmall) },
+    onClick, buttons, expanded,
+)
+
+@Composable
+fun Execution.Tile() = Tile(
+    fileName,
+    stringResource(verb.forExecutions),
+    stringResource(
+        R.string.ago,
+        (System.currentTimeMillis() - timestamp).toShortHumanReadableTime(),
+    ),
+)
+
+@Composable
+fun Group.Tile(
+    expanded: Boolean = false,
+    onClick: () -> Unit = {},
+    buttons: @Composable RowScope.() -> Unit = {},
+) = Tile(
+    name, null, null,
+    {
+        Text(
+            if (ruleIds.isEmpty())
+                stringResource(R.string.all_rules)
+            else
+                pluralStringResource(R.plurals.rule, ruleIds.size, ruleIds.size),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Normal,
+        )
+    },
+    onClick, buttons, expanded,
+)

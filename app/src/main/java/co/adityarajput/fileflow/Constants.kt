@@ -6,6 +6,7 @@ object Constants {
 
     const val SETTINGS = "settings"
     const val BRIGHTNESS = "brightness"
+    const val ENABLE_RULE_NAMES = "enable_rule_names"
 
     const val WORKER_NAME = "fileflow_worker"
     const val RULE_ID = "ruleId"

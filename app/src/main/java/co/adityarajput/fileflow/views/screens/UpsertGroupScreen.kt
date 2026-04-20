@@ -143,17 +143,10 @@ fun UpsertGroupScreen(
                                 .padding(horizontal = dimensionResource(R.dimen.padding_small)),
                         ) {
                             items(rules, { it.id }) {
-                                Tile(
-                                    it.action.srcFileNamePattern,
-                                    stringResource(it.action.verb.forRules),
-                                    null,
-                                    {
-                                        Text(
-                                            it.getDescription(),
-                                            style = MaterialTheme.typography.bodySmall,
-                                        )
-                                    },
-                                    {
+                                it.Tile(
+                                    expanded = true,
+                                    showExecutions = false,
+                                    onClick = {
                                         viewModel.updateForm(
                                             viewModel.state.values.copy(
                                                 ruleIds = if (it.id in selectedRuleIds) selectedRuleIds - it.id
@@ -161,9 +154,9 @@ fun UpsertGroupScreen(
                                             ),
                                         )
                                     },
-                                    { Checkbox(it.id in selectedRuleIds, null) },
-                                    true,
-                                )
+                                ) {
+                                    Checkbox(it.id in selectedRuleIds, null)
+                                }
                             }
                         }
                     }

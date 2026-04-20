@@ -18,7 +18,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import co.adityarajput.fileflow.R
-import co.adityarajput.fileflow.utils.toShortHumanReadableTime
 import co.adityarajput.fileflow.viewmodels.ExecutionsViewModel
 import co.adityarajput.fileflow.viewmodels.Provider
 import co.adityarajput.fileflow.views.components.AppBar
@@ -59,18 +58,7 @@ fun ExecutionsScreen(
                     .padding(paddingValues)
                     .padding(dimensionResource(R.dimen.padding_small))
                     .fillMaxSize(),
-            ) {
-                items(state.value.executions!!, { it.id }) {
-                    Tile(
-                        it.fileName,
-                        stringResource(it.verb.forExecutions),
-                        stringResource(
-                            R.string.ago,
-                            (System.currentTimeMillis() - it.timestamp).toShortHumanReadableTime(),
-                        ),
-                    )
-                }
-            }
+            ) { items(state.value.executions!!, { it.id }) { it.Tile() } }
         }
     }
 }

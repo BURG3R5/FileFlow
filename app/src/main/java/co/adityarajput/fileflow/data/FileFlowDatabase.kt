@@ -14,14 +14,12 @@ import co.adityarajput.fileflow.data.models.Server
 
 @Database(
     [Rule::class, Execution::class, Group::class, Server::class],
-    version = 7,
+    version = 8,
     autoMigrations = [
         AutoMigration(1, 2),
         AutoMigration(2, 3, FileFlowDatabase.DeleteEColumnAV::class),
-        AutoMigration(3, 4),
-        AutoMigration(4, 5),
-        AutoMigration(5, 6),
-        AutoMigration(6, 7),
+        AutoMigration(3, 4), AutoMigration(4, 5), AutoMigration(5, 6),
+        AutoMigration(6, 7), AutoMigration(7, 8),
     ],
 )
 @TypeConverters(Converters::class)

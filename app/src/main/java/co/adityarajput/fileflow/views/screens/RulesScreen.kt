@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -91,62 +90,47 @@ fun RulesScreen(
                     .fillMaxSize(),
             ) {
                 items(state.value.rules!!, { it.id }) {
-                    Tile(
-                        it.action.srcFileNamePattern,
-                        stringResource(it.action.verb.forRules),
-                        if (!it.enabled) stringResource(R.string.disabled)
-                        else pluralStringResource(
-                            R.plurals.execution,
-                            it.executions,
-                            it.executions,
-                        ),
-                        {
-                            Text(
-                                it.getDescription(),
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        },
-                        {
+                    it.Tile(
+                        viewModel.selectedRule == it,
+                        onClick = {
                             if (viewModel.selectedRule == it) viewModel.selectedRule = null
                             else viewModel.selectedRule = it
                         },
-                        {
-                            IconButton({ viewModel.dialogState = DialogState.EXECUTE }) {
-                                Icon(
-                                    painterResource(R.drawable.play_circle),
-                                    stringResource(R.string.execute_rule),
-                                )
-                            }
-                            IconButton({ viewModel.dialogState = DialogState.TOGGLE_RULE }) {
-                                Icon(
-                                    if (it.enabled) painterResource(R.drawable.archive)
-                                    else painterResource(R.drawable.unarchive),
-                                    stringResource(
-                                        R.string.toggle_rule,
-                                        it.enabled.getToggleString(),
-                                    ),
-                                )
-                            }
-                            IconButton({ goToUpsertRuleScreen(Json.encodeToString(it)) }) {
-                                Icon(
-                                    painterResource(R.drawable.edit),
-                                    stringResource(R.string.edit_rule),
-                                )
-                            }
-                            IconButton(
-                                { viewModel.dialogState = DialogState.DELETE },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.tertiary,
+                    ) {
+                        IconButton({ viewModel.dialogState = DialogState.EXECUTE }) {
+                            Icon(
+                                painterResource(R.drawable.play_circle),
+                                stringResource(R.string.execute_rule),
+                            )
+                        }
+                        IconButton({ viewModel.dialogState = DialogState.TOGGLE_RULE }) {
+                            Icon(
+                                if (it.enabled) painterResource(R.drawable.archive)
+                                else painterResource(R.drawable.unarchive),
+                                stringResource(
+                                    R.string.toggle_rule,
+                                    it.enabled.getToggleString(),
                                 ),
-                            ) {
-                                Icon(
-                                    painterResource(R.drawable.delete),
-                                    stringResource(R.string.delete),
-                                )
-                            }
-                        },
-                        viewModel.selectedRule == it,
-                    )
+                            )
+                        }
+                        IconButton({ goToUpsertRuleScreen(Json.encodeToString(it)) }) {
+                            Icon(
+                                painterResource(R.drawable.edit),
+                                stringResource(R.string.edit_rule),
+                            )
+                        }
+                        IconButton(
+                            { viewModel.dialogState = DialogState.DELETE },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.tertiary,
+                            ),
+                        ) {
+                            Icon(
+                                painterResource(R.drawable.delete),
+                                stringResource(R.string.delete),
+                            )
+                        }
+                    }
                 }
                 item { Box(Modifier.height(100.dp)) {} }
             }

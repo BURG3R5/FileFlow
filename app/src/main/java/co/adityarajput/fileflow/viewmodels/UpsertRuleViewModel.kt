@@ -1,6 +1,7 @@
 package co.adityarajput.fileflow.viewmodels
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,6 +10,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.PeriodicWorkRequest
 import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants
+import co.adityarajput.fileflow.Constants.ENABLE_RULE_NAMES
+import co.adityarajput.fileflow.Constants.SETTINGS
 import co.adityarajput.fileflow.data.Repository
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.RemoteAction
@@ -61,6 +64,7 @@ class UpsertRuleViewModel(
         val isRemoteAction: Boolean = false,
         val srcServer: Server? = null,
         val destServer: Server? = null,
+        val ruleName: String? = null,
     ) {
         companion object {
             fun from(rule: Rule) = when (rule.action) {
@@ -72,6 +76,7 @@ class UpsertRuleViewModel(
                     rule.action.scanSubdirectories, rule.action.preserveStructure,
                     interval = rule.interval,
                     cronString = rule.cronString,
+                    ruleName = rule.name,
                 )
 
                 is Action.DELETE_STALE -> Values(
@@ -81,6 +86,7 @@ class UpsertRuleViewModel(
                     retentionDays = rule.action.retentionDays,
                     interval = rule.interval,
                     cronString = rule.cronString,
+                    ruleName = rule.name,
                 )
 
                 is Action.ZIP -> Values(
@@ -92,6 +98,7 @@ class UpsertRuleViewModel(
                     preserveStructure = rule.action.preserveStructure,
                     interval = rule.interval,
                     cronString = rule.cronString,
+                    ruleName = rule.name,
                 )
 
                 is Action.EMIT_CHANGES -> Values(
@@ -104,6 +111,7 @@ class UpsertRuleViewModel(
                     packageName = rule.action.packageName,
                     extras = rule.action.extras,
                     modifiedWithin = rule.action.modifiedWithin,
+                    ruleName = rule.name,
                 )
 
                 is RemoteAction.MOVE -> Values(
@@ -117,6 +125,7 @@ class UpsertRuleViewModel(
                     isRemoteAction = true,
                     srcServer = rule.action.srcServer,
                     destServer = rule.action.destServer,
+                    ruleName = rule.name,
                 )
 
                 is RemoteAction.DELETE_STALE -> Values(
@@ -128,6 +137,7 @@ class UpsertRuleViewModel(
                     cronString = rule.cronString,
                     isRemoteAction = true,
                     srcServer = rule.action.srcServer,
+                    ruleName = rule.name,
                 )
 
                 is RemoteAction.ZIP -> Values(
@@ -142,6 +152,7 @@ class UpsertRuleViewModel(
                     isRemoteAction = true,
                     srcServer = rule.action.srcServer,
                     destServer = rule.action.destServer,
+                    ruleName = rule.name,
                 )
 
                 is RemoteAction.EMIT_CHANGES -> Values(
@@ -156,6 +167,7 @@ class UpsertRuleViewModel(
                     modifiedWithin = rule.action.modifiedWithin,
                     isRemoteAction = true,
                     srcServer = rule.action.srcServer,
+                    ruleName = rule.name,
                 )
             }
         }
@@ -210,6 +222,7 @@ class UpsertRuleViewModel(
             },
             interval = interval,
             cronString = cronString,
+            name = ruleName,
             id = ruleId,
         )
     }
@@ -224,6 +237,9 @@ class UpsertRuleViewModel(
 
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
     var remoteFolderPickerState by mutableStateOf<RemoteFolderPickerState?>(null)
+
+    val enableRuleNames = context.getSharedPreferences(SETTINGS, MODE_PRIVATE)
+        .getBoolean(ENABLE_RULE_NAMES, false)
 
     init {
         updateForm(context)
@@ -280,12 +296,12 @@ class UpsertRuleViewModel(
         } catch (_: Exception) {
         }
 
-        if (
-            (values.actionBase is Action.MOVE && predictedDestFileNames == null)
-            || (values.actionBase is Action.ZIP && predictedDestFileNames?.size != 1)
-        ) {
-            warning = RuleFormWarning.CANNOT_PREDICT_DEST_NAMES
-        }
+        if (values.dest.isNotBlank() && values.destFileNameTemplate.isNotBlank() && predictedDestFileNames == null)
+            if (values.actionBase is Action.MOVE || values.actionBase is Action.ZIP)
+                warning = RuleFormWarning.CANNOT_PREDICT_DEST_NAMES
+
+        if (enableRuleNames && values.ruleName.isNullOrBlank())
+            warning = RuleFormWarning.NO_RULE_NAME
 
         val values = values.copy(
             currentSrcFileNames = currentSrcFiles.orEmpty().mapNotNull { it.name }.distinct(),
@@ -297,12 +313,19 @@ class UpsertRuleViewModel(
 
     suspend fun submitForm(context: Context) {
         if (RuleFormError.from(state.values) == null) {
-            val rule = state.values.toRule()
+            var rule = state.values.toRule()
+
+            if (enableRuleNames && rule.name.isNullOrBlank()) {
+                val latestRuleId = repository.rules().first().maxOfOrNull { it.id } ?: 0
+                rule = rule.copy(name = "Rule #${if (rule.id != 0) rule.id else latestRuleId + 1}")
+            }
+
             Logger.d(
                 "UpsertRuleViewModel",
                 "${if (state.values.ruleId == 0) "Adding" else "Updating"} $rule",
             )
             repository.upsert(rule)
+
             context.scheduleWork()
         }
     }
@@ -406,4 +429,4 @@ enum class RuleFormError {
     }
 }
 
-enum class RuleFormWarning { NO_MATCHES_IN_SRC, CANNOT_PREDICT_DEST_NAMES }
+enum class RuleFormWarning { NO_MATCHES_IN_SRC, CANNOT_PREDICT_DEST_NAMES, NO_RULE_NAME }

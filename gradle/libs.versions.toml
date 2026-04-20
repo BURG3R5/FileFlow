@@ -1,6 +1,6 @@
 [versions]
 aboutlibraries = "14.0.1"
-agp = "9.1.0"
+agp = "9.1.1"
 kotlin = "2.3.20"
 coreKtx = "1.18.0"
 junit = "4.13.2"

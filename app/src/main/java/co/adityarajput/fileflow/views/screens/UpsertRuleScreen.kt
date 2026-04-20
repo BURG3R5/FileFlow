@@ -176,6 +176,15 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         viewModel.updateForm(context, viewModel.state.values.copy(dest = uri.toString()))
     }
 
+    if (viewModel.enableRuleNames)
+        OutlinedTextField(
+            viewModel.state.values.ruleName ?: "",
+            { viewModel.updateForm(context, viewModel.state.values.copy(ruleName = it)) },
+            Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.rule_name)) },
+            placeholder = { Text(stringResource(R.string.rule_name_placeholder)) },
+            colors = textFieldColors,
+        )
     Text(
         stringResource(R.string.action),
         style = MaterialTheme.typography.bodyLarge,
@@ -797,7 +806,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                 },
                 Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.package_name)) },
-                placeholder = { Text(stringResource(R.string.pattern_placeholder)) },
+                placeholder = { Text(stringResource(R.string.package_placeholder)) },
                 colors = textFieldColors,
             )
             OutlinedTextField(
@@ -830,6 +839,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
     else if (viewModel.state.error == RuleFormError.REMOTE_ACTION_WITHOUT_SERVER) ErrorText(R.string.remote_action_without_servers)
     else if (viewModel.state.warning == RuleFormWarning.NO_MATCHES_IN_SRC) WarningText(R.string.pattern_doesnt_match_src_files)
     else if (viewModel.state.warning == RuleFormWarning.CANNOT_PREDICT_DEST_NAMES) WarningText(R.string.cannot_predict_dest_names)
+    else if (viewModel.state.warning == RuleFormWarning.NO_RULE_NAME) WarningText(R.string.rule_name_not_provided)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

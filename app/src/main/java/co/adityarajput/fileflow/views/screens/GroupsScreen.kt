@@ -15,9 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -89,47 +87,31 @@ fun GroupsScreen(
                     .fillMaxSize(),
             ) {
                 items(groups, { it.id }) {
-                    Tile(
-                        it.name,
-                        content = {
-                            Text(
-                                if (it.ruleIds.isEmpty())
-                                    stringResource(R.string.all_rules)
-                                else
-                                    pluralStringResource(
-                                        R.plurals.rule,
-                                        it.ruleIds.size,
-                                        it.ruleIds.size,
-                                    ),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Normal,
-                            )
-                        },
-                        onClick = {
+                    it.Tile(
+                        viewModel.selectedGroup == it,
+                        {
                             if (viewModel.selectedGroup == it) viewModel.selectedGroup = null
                             else viewModel.selectedGroup = it
                         },
-                        buttons = {
-                            IconButton({ goToUpsertGroupScreen(Json.encodeToString(it)) }) {
-                                Icon(
-                                    painterResource(R.drawable.edit),
-                                    stringResource(R.string.edit_group),
-                                )
-                            }
-                            IconButton(
-                                { viewModel.showDeleteDialog = true },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.tertiary,
-                                ),
-                            ) {
-                                Icon(
-                                    painterResource(R.drawable.delete),
-                                    stringResource(R.string.delete_group),
-                                )
-                            }
-                        },
-                        expanded = viewModel.selectedGroup == it,
-                    )
+                    ) {
+                        IconButton({ goToUpsertGroupScreen(Json.encodeToString(it)) }) {
+                            Icon(
+                                painterResource(R.drawable.edit),
+                                stringResource(R.string.edit_group),
+                            )
+                        }
+                        IconButton(
+                            { viewModel.showDeleteDialog = true },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.tertiary,
+                            ),
+                        ) {
+                            Icon(
+                                painterResource(R.drawable.delete),
+                                stringResource(R.string.delete_group),
+                            )
+                        }
+                    }
                 }
                 item { Box(Modifier.height(100.dp)) {} }
             }
