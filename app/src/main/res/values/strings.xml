@@ -7,7 +7,8 @@
     <string name="app_logo">App logo</string>
     <string name="app_description">" scans your files periodically and organizes them according to your rules."</string>
     <string name="app_links"><![CDATA[Licensed under <a href=\"https://github.com/BURG3R5/FileFlow/blob/master/LICENSE\">GPLv3</a><br/>Source code available on <a href=\"https://github.com/BURG3R5/FileFlow\">GitHub</a><br/>Visit the <a href=\"https://github.com/BURG3R5/FileFlow/wiki\">project wiki</a> for more]]></string>
-    <string name="app_permissions"><![CDATA[Permissions<small><ul><li>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: to request exemption from background usage restrictions</li><li>WRITE/MANAGE_EXTERNAL_STORAGE: for targeting protected folders</li></ul>Other permissions may be used by libraries to manage tasks, such as executing flows periodically.</small>]]></string>
+    <string name="app_permissions_without_network"><![CDATA[Permissions<small><ul><li>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: to request exemption from background usage restrictions</li><li>WRITE/MANAGE_EXTERNAL_STORAGE: for targeting protected folders</li></ul>Other permissions may be used by libraries to manage tasks, such as executing flows periodically.</small>]]></string>
+    <string name="app_permissions_with_network"><![CDATA[Permissions<small><ul><li>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: to request exemption from background usage restrictions</li><li>WRITE/MANAGE_EXTERNAL_STORAGE: for targeting protected folders</li><li>INTERNET: to connect to SFTP servers, for remote actions</li></ul>Other permissions may be used by libraries to manage tasks, such as executing flows periodically.</small>]]></string>
     <string name="dev_credit"><![CDATA[Developed by <a href=\"https://github.com/BURG3R5/\">BURG3R5</a>]]></string>
     <!-- region AppBar -->
     <string name="back_button">Back button</string>
@@ -58,7 +59,8 @@
     <string name="onboarding_info_1">"FileFlow scans your files periodically and organizes them according to your rules.\n\nOn some devices, the 'battery optimization' feature leads to delayed execution."</string>
     <string name="disable_optimization">Disable optimization</string>
     <string name="skip">Skip</string>
-    <string name="onboarding_info_2">"To use advanced features such as targeting protected folders, FileFlow will need all files access.\n\nNo data is sent off-device; FileFlow doesn't have access to the internet."</string>
+    <string name="onboarding_info_2_without_network">"To use advanced features such as targeting protected folders, FileFlow will need all files access.\n\nNo data is sent off-device; FileFlow doesn't have access to the internet."</string>
+    <string name="onboarding_info_2_with_network">To use advanced features such as targeting protected folders, FileFlow will need all files access.</string>
     <string name="grant_permission">Grant permission</string>
     <!-- endregion -->
 

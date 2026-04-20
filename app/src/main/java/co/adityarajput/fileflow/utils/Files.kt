@@ -22,20 +22,22 @@ import java.io.File as IOFile
 sealed class File {
     companion object {
         fun fromPath(context: Context, path: String): File? {
+            var e1: Exception?
             try {
                 return DocumentFile.fromTreeUri(context, path.toUri())?.let {
                     if (it.exists()) SAFFile(it) else null
                 }!!
             } catch (e: Exception) {
-                Logger.w("Files", "Error while creating SAFFile from path: $path", e)
+                e1 = e
             }
 
             try {
                 return IOFile(path).let {
                     if (it.exists()) FSFile(it) else null
                 }!!
-            } catch (e: Exception) {
-                Logger.w("Files", "Error while creating FSFile from path: $path", e)
+            } catch (e2: Exception) {
+                Logger.w("Files", "Error while creating SAFFile from path: $path", e1)
+                Logger.w("Files", "Error while creating FSFile from path: $path", e2)
             }
 
             return null
