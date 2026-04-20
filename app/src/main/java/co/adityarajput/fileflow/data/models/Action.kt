@@ -328,7 +328,10 @@ sealed class Action {
                             ZipEntry(
                                 if (!preserveStructure) srcFileName
                                 else srcFile.pathRelativeTo(src)!!,
-                            ),
+                            ).apply {
+                                time = srcFile.lastModified
+                                srcFile.creationTime?.let { creationTime = it }
+                            },
                         )
                         srcFile.getInputStream(context).use { src ->
                             if (src == null) {

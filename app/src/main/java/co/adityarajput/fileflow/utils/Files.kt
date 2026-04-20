@@ -17,6 +17,8 @@ import java.net.URLDecoder
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.attribute.FileTime
 import java.io.File as IOFile
 
 sealed class File {
@@ -56,6 +58,8 @@ sealed class File {
         override val isDirectory get() = documentFile.isDirectory
 
         override val parent get() = documentFile.parentFile?.let { SAFFile(it) }
+
+        override val creationTime = null
 
         override val lastModified get() = documentFile.lastModified()
 
@@ -150,6 +154,15 @@ sealed class File {
         override val isDirectory get() = ioFile.isDirectory
 
         override val parent: File? get() = ioFile.parentFile?.let { FSFile(it) }
+
+        override val creationTime
+            get() = try {
+                Files.readAttributes(ioFile.toPath(), BasicFileAttributes::class.java)
+                    .creationTime()
+            } catch (e: Exception) {
+                Logger.w("Files", "Failed to get file creation time", e)
+                null
+            }
 
         override val lastModified get() = ioFile.lastModified()
 
@@ -263,6 +276,8 @@ sealed class File {
     abstract val isDirectory: Boolean
 
     abstract val parent: File?
+
+    abstract val creationTime: FileTime?
 
     abstract val lastModified: Long
 

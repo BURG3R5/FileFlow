@@ -448,6 +448,7 @@ sealed class RemoteAction : Action() {
                                 && it.name != null
                                 && Regex(srcFileNamePattern).matches(it.name!!)
                     }
+                    ?.map { it to null }
                     ?: return
             } else {
                 SFTP.runOn(srcServer) {
@@ -461,7 +462,7 @@ sealed class RemoteAction : Action() {
                                 tempDir.resolve(Paths.get(src).relativize(Paths.get(it.path)))
                             Files.createDirectories(tempFilePath.parent)
                             get(it.path, tempFilePath.toString())
-                            File.fromPath(context, tempFilePath.toString())
+                            File.fromPath(context, tempFilePath.toString())!! to it
                         } catch (e: Exception) {
                             Logger.e("RemoteAction", "Failed to fetch ${it.name}", e)
                             null
@@ -471,7 +472,7 @@ sealed class RemoteAction : Action() {
             }
 
             ZipOutputStream(BufferedOutputStream(destFile.getOutputStream(context))).use { dest ->
-                for (srcFile in srcFiles) {
+                for ((srcFile, remoteFileInfo) in srcFiles) {
                     val srcFileName = srcFile.name ?: continue
                     Logger.i("RemoteAction", "Adding $srcFileName to archive")
 
@@ -480,7 +481,14 @@ sealed class RemoteAction : Action() {
                             ZipEntry(
                                 if (!preserveStructure) srcFileName
                                 else srcFile.pathRelativeTo(src)!!,
-                            ),
+                            ).apply {
+                                if (remoteFileInfo != null) {
+                                    time = remoteFileInfo.attributes.mtime * 1000
+                                } else {
+                                    time = srcFile.lastModified
+                                    srcFile.creationTime?.let { creationTime = it }
+                                }
+                            },
                         )
                         srcFile.getInputStream(context).use { src ->
                             if (src == null) {
