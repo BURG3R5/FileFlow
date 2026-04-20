@@ -8,4 +8,8 @@
     public final void d(...);
 }
 
+-dontwarn javax.annotation.processing.Processor
+-dontwarn javax.annotation.processing.AbstractProcessor
+-dontwarn javax.annotation.processing.SupportedOptions
+
 #-printusage usage.txt

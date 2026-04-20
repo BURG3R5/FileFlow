@@ -106,6 +106,8 @@ dependencies {
     implementation(libs.cron.utils)
     implementation(libs.sshj)
     implementation(libs.google.crypto.tink)
+    implementation(libs.acra.dialog)
+    implementation(libs.acra.mail)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

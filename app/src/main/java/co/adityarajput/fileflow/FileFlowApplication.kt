@@ -9,6 +9,11 @@ import co.adityarajput.fileflow.utils.upsertShortcuts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.acra.ACRA
+import org.acra.config.dialog
+import org.acra.config.mailSender
+import org.acra.data.StringFormat
+import org.acra.ktx.initAcra
 import java.security.Security
 
 class FileFlowApplication : Application() {
@@ -16,6 +21,28 @@ class FileFlowApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        if (ACRA.isACRASenderServiceProcess())
+            return
+
+        initAcra {
+            buildConfigClass = BuildConfig::class.java
+            reportFormat = StringFormat.JSON
+
+            mailSender {
+                mailTo = Constants.CRASH_REPORT_EMAIL
+                subject = "FileFlow Crash Report"
+                additionalSharedPreferences = listOf(Constants.STATE, Constants.SETTINGS)
+            }
+
+            dialog {
+                title = "App Crashed"
+                text =
+                    "FileFlow has encountered an unexpected error and crashed. Please report this incident to the developers using the following form."
+                commentPrompt = "Your comments:"
+                positiveButtonText = "Send email"
+            }
+        }
 
         container = AppContainer(this)
 
