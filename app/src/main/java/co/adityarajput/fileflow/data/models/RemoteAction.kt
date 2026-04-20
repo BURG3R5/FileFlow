@@ -326,7 +326,7 @@ sealed class RemoteAction : Action() {
                 // INFO: While debugging, treat days as seconds
                 val oldestMTime = (
                         System.currentTimeMillis() -
-                                (if (context.isDebugBuild()) retentionDays * 1000L
+                                (if (BuildConfig.DEBUG) retentionDays * 1000L
                                 else retentionTimeInMillis())
                         ) / 1000
 

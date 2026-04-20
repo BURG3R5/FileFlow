@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants
 import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.data.Verb
@@ -236,7 +237,7 @@ sealed class Action {
                 ?.filter {
                     System.currentTimeMillis() - it.lastModified >=
                             // INFO: While debugging, treat days as seconds
-                            if (context.isDebugBuild()) retentionDays * 1000L
+                            if (BuildConfig.DEBUG) retentionDays * 1000L
                             else retentionTimeInMillis()
                 }
                 ?: return

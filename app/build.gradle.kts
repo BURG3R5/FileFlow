@@ -22,8 +22,8 @@ android {
         applicationId = "co.adityarajput.fileflow"
         minSdk = 29
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.6.0"
+        versionCode = 9
+        versionName = "1.7.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -106,6 +106,8 @@ dependencies {
     implementation(libs.cron.utils)
     implementation(libs.sshj)
     implementation(libs.google.crypto.tink)
+    implementation(libs.acra.dialog)
+    implementation(libs.acra.mail)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

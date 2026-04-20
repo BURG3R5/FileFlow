@@ -20,6 +20,7 @@ ksp = "2.3.4"
 cron = "9.2.1"
 sshj = "0.40.0"
 tink = "1.21.0"
+acra = "5.13.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +51,8 @@ aboutlibraries-compose = { group = "com.mikepenz", name = "aboutlibraries-compos
 cron-utils = { group = "com.cronutils", name = "cron-utils", version.ref = "cron" }
 sshj = { group = "com.hierynomus", name = "sshj", version.ref = "sshj" }
 google-crypto-tink = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
+acra-dialog = { group = "ch.acra", name = "acra-dialog", version.ref = "acra" }
+acra-mail = { group = "ch.acra", name = "acra-mail", version.ref = "acra" }
 
 [plugins]
 aboutlibraries-android = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutlibraries" }

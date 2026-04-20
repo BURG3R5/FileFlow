@@ -1,0 +1,3 @@
+• feat: Add an optional "name" field to rules (visit app settings to enable)
+• feat: Add a "path" special reference for templates (check project wiki for details)
+• feat: Add opt-in email-based crash reporting using ACRA

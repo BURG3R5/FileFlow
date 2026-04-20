@@ -1,6 +1,8 @@
 package co.adityarajput.fileflow
 
 object Constants {
+    const val CRASH_REPORT_EMAIL = "mail@adityarajput.co"
+
     const val STATE = "state"
     const val IS_FIRST_RUN = "is_first_run"
 
