@@ -20,7 +20,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
-import net.schmizz.sshj.sftp.RemoteResourceInfo
 import java.io.BufferedOutputStream
 import java.net.URLConnection
 import java.nio.file.Files
@@ -112,7 +111,6 @@ sealed class RemoteAction : Action() {
                 }
             } else null
 
-            val srcRemoteFiles = mutableListOf<RemoteResourceInfo>()
             val tempDir =
                 withContext(Dispatchers.IO) { Files.createTempDirectory("fileflow-sftp-temp-downloads") }
 
@@ -156,7 +154,7 @@ sealed class RemoteAction : Action() {
 
             val destLocalPaths = mutableListOf<String?>()
 
-            for ((srcFile, remoteFileInfo) in srcFiles) {
+            for ((srcFile, _) in srcFiles) {
                 val srcFileName = srcFile.name ?: continue
                 val destFileName = getDestFileName(srcFile)
                 val relativePath = srcFile.parent!!.pathRelativeTo(src)
@@ -233,8 +231,6 @@ sealed class RemoteAction : Action() {
                                     srcFile.path,
                                     "${destSubDir.trimEnd('/')}/$destFileName",
                                 )
-                                if (!keepOriginal && remoteFileInfo != null)
-                                    rm(remoteFileInfo.path)
 
                                 true
                             } catch (e: Exception) {
@@ -275,13 +271,14 @@ sealed class RemoteAction : Action() {
                     }.distinct().toTypedArray(),
                     null,
                 ) { path, _ -> Logger.d("RemoteAction", "Scanned media at $path") }
-            } else if (!keepOriginal) {
-                SFTP.runOn(srcServer!!) {
-                    for (file in srcRemoteFiles) {
+            }
+            if (srcServer != null && !keepOriginal) {
+                SFTP.runOn(srcServer) {
+                    for ((_, remoteFileInfo) in srcFiles) {
                         try {
-                            rm(file.path)
+                            rm(remoteFileInfo!!.path)
                         } catch (e: Exception) {
-                            Logger.e("RemoteAction", "Failed to delete ${file.name}", e)
+                            Logger.e("RemoteAction", "Failed to delete ${remoteFileInfo?.name}", e)
                         }
                     }
                 }
