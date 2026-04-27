@@ -65,6 +65,7 @@ class UpsertRuleViewModel(
         val srcServer: Server? = null,
         val destServer: Server? = null,
         val ruleName: String? = null,
+        val deleteEmptySrcSubdirectories: Boolean = false,
     ) {
         companion object {
             fun from(rule: Rule) = when (rule.action) {
@@ -77,6 +78,7 @@ class UpsertRuleViewModel(
                     interval = rule.interval,
                     cronString = rule.cronString,
                     ruleName = rule.name,
+                    deleteEmptySrcSubdirectories = rule.action.deleteEmptySrcSubdirectories,
                 )
 
                 is Action.DELETE_STALE -> Values(
@@ -87,6 +89,7 @@ class UpsertRuleViewModel(
                     interval = rule.interval,
                     cronString = rule.cronString,
                     ruleName = rule.name,
+                    deleteEmptySrcSubdirectories = rule.action.deleteEmptySrcSubdirectories,
                 )
 
                 is Action.ZIP -> Values(
@@ -126,6 +129,7 @@ class UpsertRuleViewModel(
                     srcServer = rule.action.srcServer,
                     destServer = rule.action.destServer,
                     ruleName = rule.name,
+                    deleteEmptySrcSubdirectories = rule.action.deleteEmptySrcSubdirectories,
                 )
 
                 is RemoteAction.DELETE_STALE -> Values(
@@ -138,6 +142,7 @@ class UpsertRuleViewModel(
                     isRemoteAction = true,
                     srcServer = rule.action.srcServer,
                     ruleName = rule.name,
+                    deleteEmptySrcSubdirectories = rule.action.deleteEmptySrcSubdirectories,
                 )
 
                 is RemoteAction.ZIP -> Values(
@@ -178,11 +183,14 @@ class UpsertRuleViewModel(
                     Action.MOVE(
                         src, srcFileNamePattern, dest, destFileNameTemplate,
                         scanSubdirectories, keepOriginal, overwriteExisting, superlative,
-                        preserveStructure,
+                        preserveStructure, deleteEmptySrcSubdirectories,
                     )
 
                 is Action.DELETE_STALE ->
-                    Action.DELETE_STALE(src, srcFileNamePattern, retentionDays, scanSubdirectories)
+                    Action.DELETE_STALE(
+                        src, srcFileNamePattern, retentionDays, scanSubdirectories,
+                        deleteEmptySrcSubdirectories,
+                    )
 
                 is Action.ZIP ->
                     Action.ZIP(
@@ -200,12 +208,13 @@ class UpsertRuleViewModel(
                     RemoteAction.MOVE(
                         srcServer, src, srcFileNamePattern, destServer, dest, destFileNameTemplate,
                         scanSubdirectories, keepOriginal, overwriteExisting, superlative,
-                        preserveStructure,
+                        preserveStructure, deleteEmptySrcSubdirectories,
                     )
 
                 is RemoteAction.DELETE_STALE ->
                     RemoteAction.DELETE_STALE(
                         srcServer!!, src, srcFileNamePattern, retentionDays, scanSubdirectories,
+                        deleteEmptySrcSubdirectories,
                     )
 
                 is RemoteAction.ZIP ->

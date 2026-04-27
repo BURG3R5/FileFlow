@@ -78,6 +78,7 @@ sealed class Action {
         val overwriteExisting: Boolean = false,
         val superlative: FileSuperlative = FileSuperlative.LATEST,
         val preserveStructure: Boolean = scanSubdirectories,
+        val deleteEmptySrcSubdirectories: Boolean = false,
     ) : Action() {
         override val verb get() = if (keepOriginal) Verb.COPY else Verb.MOVE
 
@@ -184,6 +185,22 @@ sealed class Action {
                 registerExecution(srcFileName)
             }
 
+            if (deleteEmptySrcSubdirectories) {
+                val emptySrcSubdirectories =
+                    File.fromPath(context, src)?.listEmptySubdirectories() ?: return
+
+                for (srcSubDir in emptySrcSubdirectories) {
+                    val subDirName = srcSubDir.name ?: continue
+                    Logger.i("Action", "Deleting $subDirName")
+
+                    val result = srcSubDir.delete()
+                    if (!result) {
+                        Logger.e("Action", "Failed to delete $subDirName")
+                        continue
+                    }
+                }
+            }
+
             MediaScannerConnection.scanFile(
                 context,
                 destPaths.filter { path ->
@@ -205,6 +222,7 @@ sealed class Action {
         override val srcFileNamePattern: String,
         val retentionDays: Int = 30,
         override val scanSubdirectories: Boolean = false,
+        val deleteEmptySrcSubdirectories: Boolean = false,
     ) : Action() {
         override val verb get() = Verb.DELETE_STALE
 
@@ -253,6 +271,22 @@ sealed class Action {
                 }
 
                 registerExecution(srcFileName)
+            }
+
+            if (deleteEmptySrcSubdirectories) {
+                val emptySrcSubdirectories =
+                    File.fromPath(context, src)?.listEmptySubdirectories() ?: return
+
+                for (srcSubDir in emptySrcSubdirectories) {
+                    val subDirName = srcSubDir.name ?: continue
+                    Logger.i("Action", "Deleting $subDirName")
+
+                    val result = srcSubDir.delete()
+                    if (!result) {
+                        Logger.e("Action", "Failed to delete $subDirName")
+                        continue
+                    }
+                }
             }
         }
     }

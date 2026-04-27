@@ -51,6 +51,7 @@ sealed class RemoteAction : Action() {
         val overwriteExisting: Boolean = false,
         val superlative: FileSuperlative = FileSuperlative.LATEST,
         val preserveStructure: Boolean = scanSubdirectories,
+        val deleteEmptySrcSubdirectories: Boolean = false,
     ) : RemoteAction() {
         override val verb get() = if (keepOriginal) Verb.COPY else Verb.MOVE
 
@@ -272,6 +273,23 @@ sealed class RemoteAction : Action() {
                     null,
                 ) { path, _ -> Logger.d("RemoteAction", "Scanned media at $path") }
             }
+
+            if (srcServer == null && deleteEmptySrcSubdirectories) {
+                val emptySrcSubdirectories =
+                    File.fromPath(context, src)?.listEmptySubdirectories() ?: return
+
+                for (srcSubDir in emptySrcSubdirectories) {
+                    val subDirName = srcSubDir.name ?: continue
+                    Logger.i("RemoteAction", "Deleting $subDirName")
+
+                    val result = srcSubDir.delete()
+                    if (!result) {
+                        Logger.e("RemoteAction", "Failed to delete $subDirName")
+                        continue
+                    }
+                }
+            }
+
             if (srcServer != null && !keepOriginal) {
                 SFTP.runOn(srcServer) {
                     for ((_, remoteFileInfo) in srcFiles) {
@@ -279,6 +297,24 @@ sealed class RemoteAction : Action() {
                             rm(remoteFileInfo!!.path)
                         } catch (e: Exception) {
                             Logger.e("RemoteAction", "Failed to delete ${remoteFileInfo?.name}", e)
+                        }
+                    }
+
+                    if (deleteEmptySrcSubdirectories) {
+                        val emptySrcSubdirectories =
+                            ls(src, scanSubdirectories) { it.isDirectory }
+                                .filter { ls(it.path, false) { true }.isEmpty() }
+
+                        for (subDir in emptySrcSubdirectories) {
+                            val subDirName = subDir.name ?: continue
+
+                            Logger.i("RemoteAction", "Deleting $subDirName")
+                            try {
+                                rmdir(subDir.path)
+                            } catch (e: Exception) {
+                                Logger.e("RemoteAction", "Failed to delete $subDirName", e)
+                                continue
+                            }
                         }
                     }
                 }
@@ -293,6 +329,7 @@ sealed class RemoteAction : Action() {
         override val srcFileNamePattern: String,
         val retentionDays: Int = 30,
         override val scanSubdirectories: Boolean = false,
+        val deleteEmptySrcSubdirectories: Boolean = false,
     ) : RemoteAction() {
         override val verb get() = Verb.DELETE_STALE
 
@@ -346,6 +383,23 @@ sealed class RemoteAction : Action() {
                     }
 
                     registerExecution(fileName)
+                }
+
+                if (deleteEmptySrcSubdirectories) {
+                    val emptySrcSubdirectories = ls(src, scanSubdirectories) { it.isDirectory }
+                        .filter { ls(it.path, false) { true }.isEmpty() }
+
+                    for (subDir in emptySrcSubdirectories) {
+                        val subDirName = subDir.name ?: continue
+
+                        Logger.i("RemoteAction", "Deleting $subDirName")
+                        try {
+                            rmdir(subDir.path)
+                        } catch (e: Exception) {
+                            Logger.e("RemoteAction", "Failed to delete $subDirName", e)
+                            continue
+                        }
+                    }
                 }
             }
         }

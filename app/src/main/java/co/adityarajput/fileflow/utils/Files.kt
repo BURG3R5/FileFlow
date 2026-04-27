@@ -324,6 +324,9 @@ sealed class File {
         return files
     }
 
+    fun listEmptySubdirectories() =
+        listChildren(true).filter { it.isDirectory && it.listChildren(false).isEmpty() }
+
     abstract fun createFile(name: String, mimeType: String): File?
 
     abstract fun createDirectory(relativePath: String): File?

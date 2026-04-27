@@ -164,6 +164,7 @@
     <string name="pattern_should_match">Pattern should match %1$s</string>
     <string name="or">" or "</string>
     <string name="delete_original">Delete original files from the source after execution</string>
+    <string name="delete_empty_src_directories">Delete subfolders if empty after execution</string>
     <string name="choose_superlative">"In case of multiple matches, choose: "</string>
     <string name="arrow_down">An arrow pointing downward</string>
     <string name="destination_device">"Destination device: "</string>
