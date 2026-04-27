@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.MediaScannerConnection
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import co.adityarajput.fileflow.BuildConfig
@@ -67,6 +68,10 @@ sealed class RemoteAction : Action() {
             }
             if (scanSubdirectories)
                 withStyle(dullStyle) { append(" & subfolders") }
+            if (superlative != FileSuperlative.NONE) {
+                withStyle(dullStyle) { append("\npick ") }
+                append(stringResource(superlative.displayName))
+            }
             if (srcServer != null) {
                 withStyle(dullStyle) { append("\non ") }
                 append(srcServer.host)

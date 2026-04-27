@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.MediaScannerConnection
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -90,6 +91,10 @@ sealed class Action {
             append(src.getDirectoryFromUri())
             if (scanSubdirectories)
                 withStyle(dullStyle) { append(" & subfolders") }
+            if (superlative != FileSuperlative.NONE) {
+                withStyle(dullStyle) { append("\npick ") }
+                append(stringResource(superlative.displayName))
+            }
             withStyle(dullStyle) { append("\nto ") }
             append(dest.getDirectoryFromUri())
             if (preserveStructure)
