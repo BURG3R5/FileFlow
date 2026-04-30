@@ -1,11 +1,9 @@
 package co.adityarajput.fileflow.viewmodels
 
-import android.content.Context.MODE_PRIVATE
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import co.adityarajput.fileflow.Constants.SETTINGS
 import co.adityarajput.fileflow.FileFlowApplication
 import co.adityarajput.fileflow.data.models.Group
 import co.adityarajput.fileflow.data.models.Rule
@@ -15,14 +13,7 @@ import kotlinx.serialization.json.Json
 
 object Provider {
     val Factory = viewModelFactory {
-        initializer {
-            AppearanceViewModel(
-                fileFlowApplication().getSharedPreferences(
-                    SETTINGS,
-                    MODE_PRIVATE,
-                ),
-            )
-        }
+        initializer { AppearanceViewModel() }
         initializer { RulesViewModel(fileFlowApplication().container.repository) }
         initializer { ExecutionsViewModel(fileFlowApplication().container.repository) }
         initializer { GroupsViewModel(fileFlowApplication().container.repository) }

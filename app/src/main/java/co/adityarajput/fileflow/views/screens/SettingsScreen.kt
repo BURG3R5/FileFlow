@@ -1,7 +1,6 @@
 package co.adityarajput.fileflow.views.screens
 
 import android.content.ClipData
-import android.content.Context.MODE_PRIVATE
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -21,12 +20,9 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.core.content.edit
 import co.adityarajput.fileflow.BuildConfig
-import co.adityarajput.fileflow.Constants.BRIGHTNESS
-import co.adityarajput.fileflow.Constants.ENABLE_RULE_NAMES
-import co.adityarajput.fileflow.Constants.SETTINGS
 import co.adityarajput.fileflow.R
+import co.adityarajput.fileflow.services.Preferences
 import co.adityarajput.fileflow.utils.Logger
 import co.adityarajput.fileflow.utils.Permission
 import co.adityarajput.fileflow.utils.isGranted
@@ -55,8 +51,6 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
     val handler = remember { Handler(Looper.getMainLooper()) }
-    val sharedPreferences =
-        remember { context.getSharedPreferences(SETTINGS, MODE_PRIVATE) }
 
     var hasPermissions by remember { mutableStateOf(context.isGranted(permissions)) }
 
@@ -71,9 +65,8 @@ fun SettingsScreen(
         onDispose { handler.removeCallbacksAndMessages(null) }
     }
 
-    var enableRuleNames by remember {
-        mutableStateOf(sharedPreferences.getBoolean(ENABLE_RULE_NAMES, false))
-    }
+    var enableRuleNames by remember { mutableStateOf(Preferences.enableRuleNames) }
+    var displayFullPaths by remember { mutableStateOf(Preferences.displayFullPaths) }
 
     Scaffold(
         topBar = { AppBar(stringResource(R.string.settings), true, goBack) },
@@ -164,8 +157,31 @@ fun SettingsScreen(
                             Switch(
                                 enableRuleNames,
                                 {
-                                    sharedPreferences.edit { putBoolean(ENABLE_RULE_NAMES, it) }
+                                    Preferences.enableRuleNames = it
                                     enableRuleNames = it
+                                },
+                            )
+                        }
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                            Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.display_full_paths),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    stringResource(R.string.explain_display_full_paths),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            Switch(
+                                displayFullPaths,
+                                {
+                                    Preferences.displayFullPaths = it
+                                    displayFullPaths = it
                                 },
                             )
                         }
@@ -205,7 +221,7 @@ fun SettingsScreen(
                                 SegmentedButton(
                                     i == viewModel.brightness.ordinal,
                                     {
-                                        sharedPreferences.edit { putInt(BRIGHTNESS, i) }
+                                        Preferences.brightness = i
                                         viewModel.brightness = Brightness.entries[i]
                                     },
                                     SegmentedButtonDefaults.itemShape(i, 3),

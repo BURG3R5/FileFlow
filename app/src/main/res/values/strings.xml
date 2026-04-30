@@ -114,6 +114,8 @@
     <string name="explain_all_files_access">Lets flows target protected folders</string>
     <string name="enable_rule_names">Enable rule names</string>
     <string name="explain_enable_rule_names">Adds a \"name\" field to rules</string>
+    <string name="display_full_paths">Display full paths</string>
+    <string name="explain_display_full_paths">Show full paths in rule tiles</string>
     <string name="settings_section_2">App Appearance</string>
     <string name="app_theme">App Theme</string>
     <string name="light">Light</string>
