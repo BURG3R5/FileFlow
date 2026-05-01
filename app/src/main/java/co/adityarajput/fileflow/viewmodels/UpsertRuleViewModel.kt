@@ -1,7 +1,6 @@
 package co.adityarajput.fileflow.viewmodels
 
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,13 +9,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.PeriodicWorkRequest
 import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants
-import co.adityarajput.fileflow.Constants.ENABLE_RULE_NAMES
-import co.adityarajput.fileflow.Constants.SETTINGS
 import co.adityarajput.fileflow.data.Repository
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.RemoteAction
 import co.adityarajput.fileflow.data.models.Rule
 import co.adityarajput.fileflow.data.models.Server
+import co.adityarajput.fileflow.services.Preferences
 import co.adityarajput.fileflow.utils.*
 import co.adityarajput.fileflow.views.components.FolderPickerState
 import co.adityarajput.fileflow.views.components.RemoteFolderPickerState
@@ -65,6 +63,7 @@ class UpsertRuleViewModel(
         val srcServer: Server? = null,
         val destServer: Server? = null,
         val ruleName: String? = null,
+        val deleteEmptySrcSubdirectories: Boolean = false,
     ) {
         companion object {
             fun from(rule: Rule) = when (rule.action) {
@@ -77,6 +76,7 @@ class UpsertRuleViewModel(
                     interval = rule.interval,
                     cronString = rule.cronString,
                     ruleName = rule.name,
+                    deleteEmptySrcSubdirectories = rule.action.deleteEmptySrcSubdirectories,
                 )
 
                 is Action.DELETE_STALE -> Values(
@@ -87,6 +87,7 @@ class UpsertRuleViewModel(
                     interval = rule.interval,
                     cronString = rule.cronString,
                     ruleName = rule.name,
+                    deleteEmptySrcSubdirectories = rule.action.deleteEmptySrcSubdirectories,
                 )
 
                 is Action.ZIP -> Values(
@@ -126,6 +127,7 @@ class UpsertRuleViewModel(
                     srcServer = rule.action.srcServer,
                     destServer = rule.action.destServer,
                     ruleName = rule.name,
+                    deleteEmptySrcSubdirectories = rule.action.deleteEmptySrcSubdirectories,
                 )
 
                 is RemoteAction.DELETE_STALE -> Values(
@@ -138,6 +140,7 @@ class UpsertRuleViewModel(
                     isRemoteAction = true,
                     srcServer = rule.action.srcServer,
                     ruleName = rule.name,
+                    deleteEmptySrcSubdirectories = rule.action.deleteEmptySrcSubdirectories,
                 )
 
                 is RemoteAction.ZIP -> Values(
@@ -178,11 +181,14 @@ class UpsertRuleViewModel(
                     Action.MOVE(
                         src, srcFileNamePattern, dest, destFileNameTemplate,
                         scanSubdirectories, keepOriginal, overwriteExisting, superlative,
-                        preserveStructure,
+                        preserveStructure, deleteEmptySrcSubdirectories,
                     )
 
                 is Action.DELETE_STALE ->
-                    Action.DELETE_STALE(src, srcFileNamePattern, retentionDays, scanSubdirectories)
+                    Action.DELETE_STALE(
+                        src, srcFileNamePattern, retentionDays, scanSubdirectories,
+                        deleteEmptySrcSubdirectories,
+                    )
 
                 is Action.ZIP ->
                     Action.ZIP(
@@ -200,12 +206,13 @@ class UpsertRuleViewModel(
                     RemoteAction.MOVE(
                         srcServer, src, srcFileNamePattern, destServer, dest, destFileNameTemplate,
                         scanSubdirectories, keepOriginal, overwriteExisting, superlative,
-                        preserveStructure,
+                        preserveStructure, deleteEmptySrcSubdirectories,
                     )
 
                 is RemoteAction.DELETE_STALE ->
                     RemoteAction.DELETE_STALE(
                         srcServer!!, src, srcFileNamePattern, retentionDays, scanSubdirectories,
+                        deleteEmptySrcSubdirectories,
                     )
 
                 is RemoteAction.ZIP ->
@@ -238,8 +245,7 @@ class UpsertRuleViewModel(
     var folderPickerState by mutableStateOf<FolderPickerState?>(null)
     var remoteFolderPickerState by mutableStateOf<RemoteFolderPickerState?>(null)
 
-    val enableRuleNames = context.getSharedPreferences(SETTINGS, MODE_PRIVATE)
-        .getBoolean(ENABLE_RULE_NAMES, false)
+    val enableRuleNames = Preferences.enableRuleNames
 
     init {
         updateForm(context)

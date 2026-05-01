@@ -2,6 +2,7 @@ package co.adityarajput.fileflow
 
 import android.app.Application
 import co.adityarajput.fileflow.data.AppContainer
+import co.adityarajput.fileflow.services.Preferences
 import co.adityarajput.fileflow.utils.Crypto
 import co.adityarajput.fileflow.utils.scheduleWork
 import co.adityarajput.fileflow.utils.upsertShortcuts
@@ -42,6 +43,8 @@ class FileFlowApplication : Application() {
                 positiveButtonText = "Send email"
             }
         }
+
+        Preferences.init(this)
 
         container = AppContainer(this)
 

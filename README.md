@@ -6,7 +6,7 @@
 
 FileFlow scans your files periodically and organizes them according to your rules.
 
-[<img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/co.adityarajput.fileflow) [<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80" alt="Get it at IzzyOnDroid">](https://apt.izzysoft.de/packages/co.adityarajput.fileflow) [<img src="https://github.com/user-attachments/assets/713d71c5-3dec-4ec4-a3f2-8d28d025a9c6" alt="Get it on Obtainium" height="80">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/BURG3R5/FileFlow)
+[<img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/co.adityarajput.fileflow) [<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80" alt="Get it at IzzyOnDroid">](https://apt.izzysoft.de/packages/co.adityarajput.fileflow) [<img src="https://github.com/user-attachments/assets/713d71c5-3dec-4ec4-a3f2-8d28d025a9c6" alt="Get it on Obtainium" height="80">](http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://app/%7B%22id%22%3A%22co.adityarajput.fileflow%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FBURG3R5%2FFileFlow%22%2C%22author%22%3A%22BURG3R5%22%2C%22name%22%3A%22FileFlow%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%5C%22network%5C%22%2C%5C%22invertAPKFilter%5C%22%3Atrue%7D%22%2C%22overrideSource%22%3Anull%7D)
 
 ## Screenshots
 

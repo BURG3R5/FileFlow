@@ -4,11 +4,7 @@ object Constants {
     const val CRASH_REPORT_EMAIL = "mail@adityarajput.co"
 
     const val STATE = "state"
-    const val IS_FIRST_RUN = "is_first_run"
-
     const val SETTINGS = "settings"
-    const val BRIGHTNESS = "brightness"
-    const val ENABLE_RULE_NAMES = "enable_rule_names"
 
     const val WORKER_NAME = "fileflow_worker"
     const val RULE_ID = "ruleId"

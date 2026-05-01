@@ -361,6 +361,25 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
                     fontWeight = FontWeight.Normal,
                 )
             }
+            AnimatedVisibility(!viewModel.state.values.keepOriginal) {
+                Row(
+                    Modifier.toggleable(viewModel.state.values.deleteEmptySrcSubdirectories) {
+                        viewModel.updateForm(
+                            context,
+                            viewModel.state.values.copy(deleteEmptySrcSubdirectories = it),
+                        )
+                    },
+                    Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                    Alignment.CenterVertically,
+                ) {
+                    Checkbox(viewModel.state.values.deleteEmptySrcSubdirectories, null)
+                    Text(
+                        stringResource(R.string.delete_empty_src_directories),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Normal,
+                    )
+                }
+            }
             var superlativeDropdownExpanded by remember { mutableStateOf(false) }
             Box {
                 Text(
@@ -558,6 +577,23 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         }
 
         is Action.DELETE_STALE, is RemoteAction.DELETE_STALE -> {
+            Row(
+                Modifier.toggleable(viewModel.state.values.deleteEmptySrcSubdirectories) {
+                    viewModel.updateForm(
+                        context,
+                        viewModel.state.values.copy(deleteEmptySrcSubdirectories = it),
+                    )
+                },
+                Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                Alignment.CenterVertically,
+            ) {
+                Checkbox(viewModel.state.values.deleteEmptySrcSubdirectories, null)
+                Text(
+                    stringResource(R.string.delete_empty_src_directories),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Normal,
+                )
+            }
             OutlinedTextField(
                 viewModel.state.values.retentionDays.toString(),
                 {

@@ -114,6 +114,8 @@
     <string name="explain_all_files_access">Lets flows target protected folders</string>
     <string name="enable_rule_names">Enable rule names</string>
     <string name="explain_enable_rule_names">Adds a \"name\" field to rules</string>
+    <string name="display_full_paths">Display full paths</string>
+    <string name="explain_display_full_paths">Show full paths in rule tiles</string>
     <string name="settings_section_2">App Appearance</string>
     <string name="app_theme">App Theme</string>
     <string name="light">Light</string>
@@ -164,6 +166,7 @@
     <string name="pattern_should_match">Pattern should match %1$s</string>
     <string name="or">" or "</string>
     <string name="delete_original">Delete original files from the source after execution</string>
+    <string name="delete_empty_src_directories">Delete subfolders if empty after execution</string>
     <string name="choose_superlative">"In case of multiple matches, choose: "</string>
     <string name="arrow_down">An arrow pointing downward</string>
     <string name="destination_device">"Destination device: "</string>

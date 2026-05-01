@@ -4,11 +4,13 @@ import android.content.Context
 import android.os.Build
 import android.os.Environment
 import android.os.storage.StorageManager
+import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.RemoteAction
 import co.adityarajput.fileflow.data.models.Rule
+import co.adityarajput.fileflow.services.Preferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
@@ -324,6 +326,9 @@ sealed class File {
         return files
     }
 
+    fun listEmptySubdirectories() =
+        listChildren(true).filter { it.isDirectory && it.listChildren(false).isEmpty() }
+
     abstract fun createFile(name: String, mimeType: String): File?
 
     abstract fun createDirectory(relativePath: String): File?
@@ -343,16 +348,24 @@ sealed class File {
     abstract fun delete(): Boolean
 }
 
-fun String.getDirectoryFromUri() =
+fun String.getDirectoryFromUri(): String =
     if (isBlank()) {
         this
     } else if (this.contains(':')) {
-        "/" + URLDecoder.decode(this, "UTF-8").split(":").last()
+        if (Preferences.displayFullPaths) {
+            DocumentsContract.getTreeDocumentId(toUri())
+        } else {
+            "/" + URLDecoder.decode(this, "UTF-8").split(":").last()
+        }
     } else {
-        var file = IOFile(this)
-        while (file.parentFile?.canRead() ?: false) file = file.parentFile!!
+        if (Preferences.displayFullPaths) {
+            this
+        } else {
+            var file = IOFile(this)
+            while (file.parentFile?.canRead() ?: false) file = file.parentFile!!
 
-        substringAfter(file.name ?: "").ifBlank { "/" }
+            substringAfter(file.name ?: "").ifBlank { "/" }
+        }
     }
 
 fun Context.findRulesToBeMigrated(rules: List<Rule>) =
