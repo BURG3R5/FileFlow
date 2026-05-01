@@ -210,8 +210,7 @@ sealed class Action {
                 context,
                 destPaths.filter { path ->
                     path != null && Constants.MEDIA_PREFIXES.any {
-                        URLConnection.guessContentTypeFromName(path)
-                            .startsWith(it)
+                        URLConnection.guessContentTypeFromName(path)?.startsWith(it) == true
                     }
                 }.distinct().toTypedArray(),
                 null,
