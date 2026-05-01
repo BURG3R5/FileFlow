@@ -1,0 +1,5 @@
+• chore: Disable obfuscation for release builds
+• feat: Optionally delete subfolders if empty after execution
+• feat: Display superlatives in rule tiles
+• feat: Optionally display full paths in rule tiles (visit app settings to enable)
+• fix: Skip MediaScanner for unknown file types
