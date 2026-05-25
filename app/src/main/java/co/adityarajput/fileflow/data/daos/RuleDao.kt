@@ -26,4 +26,7 @@ interface RuleDao {
 
     @Delete
     suspend fun delete(rule: Rule)
+
+    @Query("DELETE FROM rules")
+    suspend fun deleteAll()
 }

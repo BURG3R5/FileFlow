@@ -2,10 +2,12 @@ package co.adityarajput.fileflow.data
 
 import android.content.Context
 import co.adityarajput.fileflow.data.models.Action
+import co.adityarajput.fileflow.data.models.Backup
 import co.adityarajput.fileflow.data.models.Execution
 import co.adityarajput.fileflow.data.models.Rule
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 
 class AppContainer(private val context: Context) {
     val repository: Repository by lazy {
@@ -15,6 +17,26 @@ class AppContainer(private val context: Context) {
             FileFlowDatabase.getDatabase(context).groupDao(),
             FileFlowDatabase.getDatabase(context).serverDao(),
         )
+    }
+
+    suspend fun export() = Json.encodeToString<Backup>(
+        Backup(
+            // INFO: May contain servers but creds can't be decrypted anyway.
+            repository.rules().first(),
+            repository.groups().first(),
+            repository.servers().first().map {
+                it.copy(encryptedPassword = null, encryptedPrivateKey = null)
+            },
+        ),
+    )
+
+    suspend fun import(json: String) {
+        repository.deleteRulesGroupsAndServers()
+        Json.decodeFromString<Backup>(json).let { (rules, groups, servers) ->
+            repository.upsert(*rules.toTypedArray())
+            repository.upsert(*groups.toTypedArray())
+            repository.upsert(*servers.toTypedArray())
+        }
     }
 
     fun seedDemoData() {

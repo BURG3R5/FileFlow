@@ -20,4 +20,7 @@ interface GroupDao {
 
     @Delete
     suspend fun delete(group: Group)
+
+    @Query("DELETE FROM `groups`")
+    suspend fun deleteAll()
 }

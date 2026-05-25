@@ -5,6 +5,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.R
+import co.adityarajput.fileflow.data.AppContainer
 import co.adityarajput.fileflow.services.Preferences
 import co.adityarajput.fileflow.utils.Logger
 import co.adityarajput.fileflow.utils.Permission
@@ -31,6 +34,9 @@ import co.adityarajput.fileflow.viewmodels.AppearanceViewModel
 import co.adityarajput.fileflow.views.Brightness
 import co.adityarajput.fileflow.views.components.AppBar
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 private val permissions = listOf(
     Permission.UNRESTRICTED_BACKGROUND_USAGE,
@@ -233,6 +239,96 @@ fun SettingsScreen(
                                     },
                                 )
                             }
+                        }
+                    }
+                }
+                Card(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(dimensionResource(R.dimen.padding_small)),
+                ) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                dimensionResource(R.dimen.padding_large),
+                                dimensionResource(R.dimen.padding_medium),
+                            ),
+                        Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium)),
+                    ) {
+                        Text(
+                            stringResource(R.string.settings_section_3),
+                            fontWeight = FontWeight.Medium,
+                        )
+                        val importSuccess = stringResource(R.string.import_success)
+                        val importLauncher = rememberLauncherForActivityResult(
+                            ActivityResultContracts.OpenDocument(),
+                        ) { uri ->
+                            scope.launch {
+                                uri
+                                    ?.let { context.contentResolver.openInputStream(it) }
+                                    ?.use {
+                                        AppContainer(context).import(it.bufferedReader().readText())
+                                        goBack()
+                                        Toast
+                                            .makeText(context, importSuccess, Toast.LENGTH_SHORT)
+                                            .show()
+                                    }
+                            }
+                        }
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { importLauncher.launch(arrayOf("application/json")) },
+                        ) {
+                            Text(
+                                stringResource(R.string.import_backup),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                stringResource(R.string.import_warning),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                        val exportSuccess = stringResource(R.string.export_success)
+                        val appNameAndVersion =
+                            "${stringResource(R.string.app_name)}_${BuildConfig.VERSION_NAME}"
+                        val exportLauncher = rememberLauncherForActivityResult(
+                            ActivityResultContracts.CreateDocument("application/json"),
+                        ) { uri ->
+                            scope.launch {
+                                uri
+                                    ?.let { context.contentResolver.openOutputStream(it) }
+                                    ?.use {
+                                        it.write(AppContainer(context).export().toByteArray())
+                                        Toast
+                                            .makeText(context, exportSuccess, Toast.LENGTH_SHORT)
+                                            .show()
+                                    }
+                            }
+                        }
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    exportLauncher.launch(
+                                        appNameAndVersion + "_${
+                                            Instant.now().atZone(ZoneId.systemDefault())
+                                                .toLocalDateTime().format(
+                                                    DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"),
+                                                )
+                                        }.json",
+                                    )
+                                },
+                        ) {
+                            Text(
+                                stringResource(R.string.export_backup),
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                stringResource(R.string.export_explanation),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                         }
                     }
                 }

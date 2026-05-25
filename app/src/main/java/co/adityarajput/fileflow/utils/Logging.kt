@@ -20,16 +20,17 @@ object Logger {
         if (logs.size >= Constants.LOG_SIZE) logs.removeFirst()
         logs.addLast("[${System.currentTimeMillis()}][$tag][INFO] $msg")
 
-        ACRA.errorReporter.putCustomData("logs", logs.joinToString("\n"))
+        ACRA.errorReporter.putCustomData("logs", logs.toList().joinToString("\n"))
     }
 
-    fun w(tag: String, msg: String, tr: Throwable? = null) {
+    fun w(tag: String, msg: String, tr: Throwable? = null, tr2: Throwable? = null) {
         Log.w(tag, msg, tr)
+        Log.w(tag, msg, tr2)
 
         if (logs.size >= Constants.LOG_SIZE) logs.removeFirst()
         logs.addLast("[${System.currentTimeMillis()}][$tag][WARN] $msg")
 
-        ACRA.errorReporter.putCustomData("logs", logs.joinToString("\n"))
+        ACRA.errorReporter.putCustomData("logs", logs.toList().joinToString("\n"))
     }
 
     fun e(tag: String, msg: String, tr: Throwable? = null) {
@@ -38,6 +39,6 @@ object Logger {
         if (logs.size >= Constants.LOG_SIZE) logs.removeFirst()
         logs.addLast("[${System.currentTimeMillis()}][$tag][ERROR] $msg")
 
-        ACRA.errorReporter.putCustomData("logs", logs.joinToString("\n"))
+        ACRA.errorReporter.putCustomData("logs", logs.toList().joinToString("\n"))
     }
 }

@@ -40,8 +40,7 @@ sealed class File {
                     if (it.exists()) FSFile(it) else null
                 }!!
             } catch (e2: Exception) {
-                Logger.w("Files", "Error while creating SAFFile from path: $path", e1)
-                Logger.w("Files", "Error while creating FSFile from path: $path", e2)
+                Logger.w("Files", "Error while creating File from path: $path", e1, e2)
             }
 
             return null

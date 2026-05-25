@@ -17,4 +17,7 @@ interface ServerDao {
 
     @Delete
     suspend fun delete(group: Server)
+
+    @Query("DELETE FROM servers")
+    suspend fun deleteAll()
 }

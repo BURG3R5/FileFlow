@@ -121,6 +121,13 @@
     <string name="light">Light</string>
     <string name="system">System</string>
     <string name="dark">Dark</string>
+    <string name="settings_section_3">Data Transfer</string>
+    <string name="import_backup">Import backup</string>
+    <string name="import_warning">Overwrites your current rules and groups</string>
+    <string name="import_success">Data imported successfully</string>
+    <string name="export_backup">Export backup</string>
+    <string name="export_explanation">Generates a JSON export of your rules and groups</string>
+    <string name="export_success">Data exported successfully</string>
     <string name="manage_groups">Manage groups</string>
     <string name="servers">Servers</string>
     <string name="manage_servers">Manage servers</string>

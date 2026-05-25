@@ -63,4 +63,10 @@ class Repository(
     suspend fun delete(group: Group) = groupDao.delete(group)
 
     suspend fun delete(server: Server) = serverDao.delete(server)
+
+    suspend fun deleteRulesGroupsAndServers() {
+        ruleDao.deleteAll()
+        groupDao.deleteAll()
+        serverDao.deleteAll()
+    }
 }
