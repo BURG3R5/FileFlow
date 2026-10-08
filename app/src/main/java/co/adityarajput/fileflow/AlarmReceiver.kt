@@ -19,7 +19,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 val repository = AppContainer(context).repository
                 val rule = repository.rule(intent.getIntExtra(Constants.EXTRA_RULE_ID, -1))
 
-                if (rule == null || !rule.enabled)
+                if (rule?.action == null || !rule.enabled)
                     return@launch
 
                 Logger.d("AlarmReceiver", "Executing $rule")
