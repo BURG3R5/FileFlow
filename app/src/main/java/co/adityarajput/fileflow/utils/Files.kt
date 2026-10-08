@@ -7,6 +7,7 @@ import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import co.adityarajput.fileflow.Constants.CHUNK_SIZE
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.RemoteAction
 import co.adityarajput.fileflow.data.models.Rule
@@ -299,13 +300,30 @@ sealed class File {
         }
 
     fun isIdenticalTo(other: File, context: Context): Boolean {
+        if (this.length != other.length)
+            return false
+
         this.getInputStream(context).use { src ->
             other.getInputStream(context).use { dest ->
                 if (src == null || dest == null) {
                     Logger.e("Files", "Failed to open file(s)")
                     return false
                 }
-                return src.readBytes().contentEquals(dest.readBytes())
+
+                val srcChunk = ByteArray(CHUNK_SIZE)
+                val destChunk = ByteArray(CHUNK_SIZE)
+
+                while (true) {
+                    val srcRead = src.read(srcChunk)
+                    val destRead = dest.read(destChunk)
+
+                    if (srcRead != destRead)
+                        return false
+                    if (srcRead == -1)
+                        return true
+                    if (!srcChunk.copyOf(srcRead).contentEquals(destChunk.copyOf(destRead)))
+                        return false
+                }
             }
         }
     }

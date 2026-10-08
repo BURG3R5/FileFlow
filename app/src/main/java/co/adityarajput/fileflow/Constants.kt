@@ -27,4 +27,6 @@ object Constants {
     const val MAX_SHORTCUTS = 4
 
     val MEDIA_PREFIXES = listOf("image/", "video/", "audio/")
+
+    const val CHUNK_SIZE = 8192
 }

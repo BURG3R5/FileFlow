@@ -44,4 +44,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: FileFlow_nightly
-          path: app/FileFlow_nightly.apk
+          path: |
+            app/FileFlow_nightly.apk
+            app/build/outputs/mapping/nightly/mapping.txt
