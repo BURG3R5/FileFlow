@@ -34,3 +34,10 @@ FileFlow scans your files periodically and organizes them according to your rule
 
 Refer to the [wiki](https://github.com/BURG3R5/FileFlow/wiki) for instructions, examples, tips, and
 FAQs.
+
+## Verification
+
+Package ID: `co.adityarajput.fileflow` or `co.adityarajput.fileflow.network`
+
+SHA256 hash of signing certificate:
+`56:0A:30:9B:4F:01:AC:3D:28:65:EA:C6:E3:C3:35:59:EC:C7:E9:AD:8E:A7:9E:CD:58:D2:56:B4:B6:45:8A:0E`
