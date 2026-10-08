@@ -8,6 +8,7 @@ import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import co.adityarajput.fileflow.Constants.CHUNK_SIZE
+import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.RemoteAction
 import co.adityarajput.fileflow.data.models.Rule
@@ -426,7 +427,7 @@ fun Context.getAllStorages(): Map<IOFile, String> {
         Logger.e("Files", "Couldn't extract storages from external app directories", e)
     }
 
-    storages[Environment.getExternalStorageDirectory()] = "Primary Storage"
+    storages[Environment.getExternalStorageDirectory()] = getString(R.string.primary_storage)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         try {
