@@ -4,7 +4,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -55,8 +54,6 @@ private val Typography = Typography().run {
         labelSmall.copy(fontFamily = firaMono),
     )
 }
-
-val dullStyle @Composable get() = SpanStyle(MaterialTheme.colorScheme.onSurfaceVariant)
 
 val textFieldColors
     @Composable get() = OutlinedTextFieldDefaults.colors(

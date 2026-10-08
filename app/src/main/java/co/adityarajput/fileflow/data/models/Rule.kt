@@ -1,14 +1,13 @@
 package co.adityarajput.fileflow.data.models
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.res.stringResource
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import co.adityarajput.fileflow.Constants
+import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.utils.toAccurateHumanReadableTime
-import co.adityarajput.fileflow.views.dullStyle
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -33,19 +32,19 @@ data class Rule(
     val id: Int = 0,
 ) {
     @Composable
-    fun getDescription() = buildAnnotatedString {
-        if (name != null)
-            append(action.srcFileNamePattern + "\n")
-
+    fun getDescription() = buildString {
+        if (name != null) {
+            append(action.srcFileNamePattern)
+            append("\n")
+        }
         append(action.getDescription())
-
         if (interval != null) {
-            withStyle(dullStyle) { append("\nevery ") }
-            append(interval.toAccurateHumanReadableTime())
+            append("\n")
+            append(stringResource(R.string.interval_line, interval.toAccurateHumanReadableTime()))
         }
         if (cronString != null) {
-            withStyle(dullStyle) { append("\nwhen ") }
-            append(cronString)
+            append("\n")
+            append(stringResource(R.string.cron_line, cronString))
         }
     }
 }

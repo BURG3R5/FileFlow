@@ -1,0 +1,15 @@
+<resources>
+    <string name="source_line">from %1$s</string>
+    <string name="subfolders_addition">%1$s &amp; subfolders</string>
+    <string name="superlative_line">pick %1$s</string>
+    <string name="destination_line">to %1$s</string>
+    <string name="filename_line">as %1$s</string>
+    <string name="location_line">in %1$s</string>
+    <string name="retention_line">if unmodified for %1$s</string>
+    <string name="intent_line">emit %1$s</string>
+    <string name="data_line">with %1$s</string>
+    <string name="freshness_line">if modified within %1$s</string>
+    <string name="interval_line">every %1$s</string>
+    <string name="cron_line">when %1$s</string>
+    <string name="server_line">on %1$s</string>
+</resources>

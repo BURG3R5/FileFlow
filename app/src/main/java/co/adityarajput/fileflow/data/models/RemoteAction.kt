@@ -5,8 +5,6 @@ import android.content.Intent
 import android.media.MediaScannerConnection
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants
 import co.adityarajput.fileflow.R
@@ -15,7 +13,6 @@ import co.adityarajput.fileflow.data.models.Action.EMIT_CHANGES
 import co.adityarajput.fileflow.services.SFTP
 import co.adityarajput.fileflow.services.ls
 import co.adityarajput.fileflow.utils.*
-import co.adityarajput.fileflow.views.dullStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -59,37 +56,57 @@ sealed class RemoteAction : Action() {
         override val phrase = R.string.move_phrase
 
         @Composable
-        override fun getDescription() = buildAnnotatedString {
-            withStyle(dullStyle) { append("from ") }
-            if (srcServer == null) {
-                append(src.getDirectoryFromUri())
-            } else {
-                append(src)
-            }
-            if (scanSubdirectories)
-                withStyle(dullStyle) { append(" & subfolders") }
-            if (superlative != FileSuperlative.NONE) {
-                withStyle(dullStyle) { append("\npick ") }
-                append(stringResource(superlative.displayName))
-            }
+        override fun getDescription() = buildString {
+            append(
+                stringResource(
+                    R.string.source_line,
+                    if (srcServer == null) {
+                        src.getDirectoryFromUri()
+                    } else {
+                        src
+                    },
+                ).let {
+                    if (scanSubdirectories) stringResource(
+                        R.string.subfolders_addition,
+                        it,
+                    ) else it
+                },
+            )
+            append("\n")
             if (srcServer != null) {
-                withStyle(dullStyle) { append("\non ") }
-                append(srcServer.host)
+                append(stringResource(R.string.server_line, srcServer.host))
+                append("\n")
             }
-            withStyle(dullStyle) { append("\nto ") }
-            if (destServer == null) {
-                append(dest.getDirectoryFromUri())
-            } else {
-                append(dest)
+            if (superlative != FileSuperlative.NONE) {
+                append(
+                    stringResource(
+                        R.string.superlative_line,
+                        stringResource(superlative.displayName),
+                    ),
+                )
+                append("\n")
             }
-            if (preserveStructure)
-                withStyle(dullStyle) { append(" & subfolders") }
+            append(
+                stringResource(
+                    R.string.destination_line,
+                    if (destServer == null) {
+                        dest.getDirectoryFromUri()
+                    } else {
+                        dest
+                    },
+                ).let {
+                    if (preserveStructure) stringResource(
+                        R.string.subfolders_addition,
+                        it,
+                    ) else it
+                },
+            )
+            append("\n")
             if (destServer != null) {
-                withStyle(dullStyle) { append("\non ") }
-                append(destServer.host)
+                append(stringResource(R.string.server_line, destServer.host))
+                append("\n")
             }
-            withStyle(dullStyle) { append("\nas ") }
-            append(destFileNameTemplate)
+            append(stringResource(R.string.filename_line, destFileNameTemplate))
         }
 
         fun getDestFileName(srcFile: File) =
@@ -342,15 +359,24 @@ sealed class RemoteAction : Action() {
         fun retentionTimeInMillis() = retentionDays * 86_400_000L
 
         @Composable
-        override fun getDescription() = buildAnnotatedString {
-            withStyle(dullStyle) { append("in ") }
-            append(src)
-            if (scanSubdirectories)
-                withStyle(dullStyle) { append(" & subfolders") }
-            withStyle(dullStyle) { append("\non ") }
-            append(srcServer.host)
-            withStyle(dullStyle) { append("\nif unmodified for ") }
-            append((retentionTimeInMillis()).toShortHumanReadableTime())
+        override fun getDescription() = buildString {
+            append(
+                stringResource(R.string.location_line, src).let {
+                    if (scanSubdirectories) stringResource(
+                        R.string.subfolders_addition,
+                        it,
+                    ) else it
+                },
+            )
+            append("\n")
+            append(stringResource(R.string.server_line, srcServer.host))
+            append("\n")
+            append(
+                stringResource(
+                    R.string.retention_line,
+                    retentionTimeInMillis().toShortHumanReadableTime(),
+                ),
+            )
         }
 
         override suspend fun execute(
@@ -426,31 +452,43 @@ sealed class RemoteAction : Action() {
         override val phrase = R.string.zip_phrase
 
         @Composable
-        override fun getDescription() = buildAnnotatedString {
-            withStyle(dullStyle) { append("from ") }
-            if (srcServer == null) {
-                append(src.getDirectoryFromUri())
-            } else {
-                append(src)
-            }
-            if (scanSubdirectories)
-                withStyle(dullStyle) { append(" & subfolders") }
+        override fun getDescription() = buildString {
+            append(
+                stringResource(
+                    R.string.source_line,
+                    if (srcServer == null) {
+                        src.getDirectoryFromUri()
+                    } else {
+                        src
+                    },
+                ).let {
+                    if (scanSubdirectories) stringResource(
+                        R.string.subfolders_addition,
+                        it,
+                    ) else it
+                },
+            )
+            append("\n")
             if (srcServer != null) {
-                withStyle(dullStyle) { append("\non ") }
-                append(srcServer.host)
+                append(stringResource(R.string.server_line, srcServer.host))
+                append("\n")
             }
-            withStyle(dullStyle) { append("\nto ") }
-            if (destServer == null) {
-                append(dest.getDirectoryFromUri())
-            } else {
-                append(dest)
-            }
+            append(
+                stringResource(
+                    R.string.destination_line,
+                    if (destServer == null) {
+                        dest.getDirectoryFromUri()
+                    } else {
+                        dest
+                    },
+                ),
+            )
+            append("\n")
             if (destServer != null) {
-                withStyle(dullStyle) { append("\non ") }
-                append(destServer.host)
+                append(stringResource(R.string.server_line, destServer.host))
+                append("\n")
             }
-            withStyle(dullStyle) { append("\nas ") }
-            append(destFileNameTemplate)
+            append(stringResource(R.string.filename_line, destFileNameTemplate))
         }
 
         fun getDestFileName() = destFileNameTemplate.applyCustomReplacements()
@@ -615,25 +653,34 @@ sealed class RemoteAction : Action() {
         override val phrase = R.string.emit_changes_phrase
 
         @Composable
-        override fun getDescription() = buildAnnotatedString {
-            withStyle(dullStyle) { append("in ") }
-            append(src)
-            if (scanSubdirectories)
-                withStyle(dullStyle) { append(" & subfolders") }
-            withStyle(dullStyle) { append("\non ") }
-            append(srcServer.host)
-            withStyle(dullStyle) { append("\nemit ") }
-            append(intent)
+        override fun getDescription() = buildString {
+            append(
+                stringResource(R.string.location_line, src).let {
+                    if (scanSubdirectories) stringResource(
+                        R.string.subfolders_addition,
+                        it,
+                    ) else it
+                },
+            )
+            append("\n")
+            append(stringResource(R.string.server_line, srcServer.host))
+            append("\n")
+            append(stringResource(R.string.intent_line, intent))
+            append("\n")
             if (!intent.contains(packageName)) {
-                withStyle(dullStyle) { append("\nto ") }
-                append(packageName)
+                append(stringResource(R.string.destination_line, packageName))
+                append("\n")
             }
             if (extras.isNotBlank() && extras != "{}") {
-                withStyle(dullStyle) { append("\nwith ") }
-                append(extras)
+                append(stringResource(R.string.data_line, extras))
+                append("\n")
             }
-            withStyle(dullStyle) { append("\nif modified within ") }
-            append(modifiedWithin.toAccurateHumanReadableTime())
+            append(
+                stringResource(
+                    R.string.freshness_line,
+                    modifiedWithin.toShortHumanReadableTime(),
+                ),
+            )
         }
 
         override suspend fun execute(
