@@ -30,6 +30,11 @@ object Preferences {
         get() = settings.getBoolean(ENABLE_RULE_NAMES, false)
         set(value) = settings.edit { putBoolean(ENABLE_RULE_NAMES, value) }
 
+    private const val OVERRIDE_EXTENSIONS = "override_extensions"
+    var overrideExtensions
+        get() = settings.getBoolean(OVERRIDE_EXTENSIONS, false)
+        set(value) = settings.edit { putBoolean(OVERRIDE_EXTENSIONS, value) }
+
     private const val BRIGHTNESS = "brightness"
     var brightness
         get() = settings.getInt(BRIGHTNESS, 1)
