@@ -140,6 +140,7 @@
     <!-- endregion -->
 
     <!-- region Shortcuts -->
+    <string name="execute_rule_name">Execute %1$s</string>
     <string name="group_edited_or_deleted">Group linked to this shortcut was edited/deleted.</string>
     <!-- endregion -->
 
@@ -223,6 +224,7 @@
     <string name="exact_alarm_permission_description">FileFlow requires exemption from battery optimization to follow schedules exactly.</string>
     <string name="invalid_cron_string">Cron string contains errors</string>
     <string name="cron_too_frequent">To avoid rate-limiting by OS, rules cannot execute more than 4 times an hour</string>
+    <string name="rule_number">Rule #%1$d</string>
     <!-- region Action -->
     <string name="move_phrase">Copy or move to another folder</string>
     <string name="delete_stale_phrase">Delete if unmodified for a while</string>
@@ -231,6 +233,7 @@
     <!-- endregion -->
     <!-- region FolderPickerBottomSheet -->
     <string name="current_storage">"Current storage: "</string>
+    <string name="primary_storage">Primary Storage</string>
     <string name="saf">SAF</string>
     <string name="parent_directory">Back</string>
     <string name="empty_folder">(Empty)</string>
@@ -245,5 +248,12 @@
     <string name="largest">largest</string>
     <string name="all">all</string>
     <!-- endregion -->
+    <!-- endregion -->
+
+    <!-- region ACRADialog -->
+    <string name="acra_dialog_title">App Crashed</string>
+    <string name="acra_dialog_content">FileFlow has encountered an unexpected error and crashed. Please report this incident to the developers using the following form.</string>
+    <string name="your_comments">Your comments:</string>
+    <string name="send_email">Send email</string>
     <!-- endregion -->
 </resources>

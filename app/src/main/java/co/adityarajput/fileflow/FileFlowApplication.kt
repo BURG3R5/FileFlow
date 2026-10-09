@@ -36,11 +36,11 @@ class FileFlowApplication : Application() {
             }
 
             dialog {
-                title = "App Crashed"
+                title = getString(R.string.acra_dialog_title)
                 text =
-                    "FileFlow has encountered an unexpected error and crashed. Please report this incident to the developers using the following form."
-                commentPrompt = "Your comments:"
-                positiveButtonText = "Send email"
+                    getString(R.string.acra_dialog_content)
+                commentPrompt = getString(R.string.your_comments)
+                positiveButtonText = getString(R.string.send_email)
             }
         }
 

@@ -34,7 +34,7 @@ suspend fun Context.upsertShortcuts() {
             this,
             ShortcutInfoCompat.Builder(this, it.shortcutId())
                 .setRank(max(0, it.id))
-                .setShortLabel("Execute ${it.name}")
+                .setShortLabel(getString(R.string.execute_rule_name, it.name))
                 .setIcon(IconCompat.createWithResource(this, R.mipmap.ic_shortcut))
                 .setIntent(
                     Intent(this, ShortcutActivity::class.java).apply {

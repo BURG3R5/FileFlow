@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.PeriodicWorkRequest
 import co.adityarajput.fileflow.BuildConfig
 import co.adityarajput.fileflow.Constants
+import co.adityarajput.fileflow.R
 import co.adityarajput.fileflow.data.Repository
 import co.adityarajput.fileflow.data.models.Action
 import co.adityarajput.fileflow.data.models.RemoteAction
@@ -323,7 +324,12 @@ class UpsertRuleViewModel(
 
             if (enableRuleNames && rule.name.isNullOrBlank()) {
                 val latestRuleId = repository.rules().first().maxOfOrNull { it.id } ?: 0
-                rule = rule.copy(name = "Rule #${if (rule.id != 0) rule.id else latestRuleId + 1}")
+                rule = rule.copy(
+                    name = context.getString(
+                        R.string.rule_number,
+                        if (rule.id != 0) rule.id else latestRuleId + 1,
+                    ),
+                )
             }
 
             Logger.d(
