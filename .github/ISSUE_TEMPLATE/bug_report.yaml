@@ -29,6 +29,16 @@ body:
       description: "Any relevant screenshots and logs."
     validations:
       required: false
+  - type: checkboxes
+    attributes:
+      label: Optional enhancements
+      description: "Which of the following optional enhancements have you turned on? You can confirm by going to the Settings page."
+      options:
+        - label: Disable optimization
+        - label: All files access
+        - label: Enable rule names
+        - label: Display full paths
+        - label: Override extensions
   - type: textarea
     attributes:
       label: Additional context
