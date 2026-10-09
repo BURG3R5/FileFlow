@@ -6,17 +6,17 @@ on:
       - dev
 
 jobs:
-  build-nightly:
+  build-and-upload:
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: 17
           distribution: "temurin"
@@ -40,10 +40,13 @@ jobs:
           echo "${KEYSTORE}" | base64 -d > apksign.keystore
           ${ANDROID_HOME}/build-tools/34.0.0/apksigner sign --ks apksign.keystore --ks-pass env:SIGNING_STORE_PASSWORD "app/FileFlow_nightly.apk"
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Move mapping
+        run: mv app/build/outputs/mapping/nightly/mapping.txt app/FileFlow_mapping_nightly.txt
+
+      - name: Upload APK and mapping
+        uses: actions/upload-artifact@v7
         with:
           name: FileFlow_nightly
           path: |
             app/FileFlow_nightly.apk
-            app/build/outputs/mapping/nightly/mapping.txt
+            app/FileFlow_mapping_nightly.txt
