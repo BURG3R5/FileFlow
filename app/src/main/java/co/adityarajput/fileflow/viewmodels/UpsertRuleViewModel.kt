@@ -357,7 +357,7 @@ enum class FormPage {
 
 @Suppress("KotlinConstantConditions")
 enum class RuleFormError {
-    BLANK_FIELDS, INVALID_REGEX, MUST_END_IN_ZIP, INVALID_JSON,
+    BLANK_FIELDS, INVALID_REGEX, MUST_NOT_END_IN_SLASH, MUST_END_IN_ZIP, INVALID_JSON,
     REMOTE_ACTION_WITHOUT_SERVER,
     INTERVAL_TOO_SHORT, INTERVAL_TOO_LONG, INVALID_CRON_STRING, CRON_TOO_FREQUENT;
 
@@ -377,6 +377,8 @@ enum class RuleFormError {
                 is Action.MOVE, is RemoteAction.MOVE -> {
                     if (values.dest.isBlank() || values.destFileNameTemplate.isBlank())
                         return BLANK_FIELDS
+                    if (values.destFileNameTemplate.endsWith('/'))
+                        return MUST_NOT_END_IN_SLASH
                 }
 
                 is Action.ZIP, is RemoteAction.ZIP -> {

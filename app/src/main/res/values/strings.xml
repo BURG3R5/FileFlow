@@ -202,6 +202,7 @@
     <string name="modified_within">Modified within</string>
     <string name="pattern_advice"><![CDATA[Click <a href=\"https://github.com/BURG3R5/FileFlow/wiki/Examples\">here↗</a> for example patterns and templates.]]></string>
     <string name="invalid_regex">Regex pattern contains errors</string>
+    <string name="must_not_end_in_slash">Destination file name template must not end in "/"</string>
     <string name="must_end_in_zip">Archive must have extension \".zip\"</string>
     <string name="invalid_json">JSON contains errors</string>
     <string name="remote_action_without_servers">"Remote capabilities are enabled but servers aren't utilized"</string>
