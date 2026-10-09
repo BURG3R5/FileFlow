@@ -153,7 +153,7 @@ sealed class Action {
 
             for (srcFile in srcFiles) {
                 val srcFileName = srcFile.name ?: continue
-                val destFileName = getDestFileName(srcFile)
+                var destFileName = getDestFileName(srcFile)
 
                 val relativePath = srcFile.parent!!.pathRelativeTo(src)
                 val destSubDir =
@@ -162,13 +162,25 @@ sealed class Action {
                 if (destSubDir == null) {
                     Logger.e(
                         "Action",
-                        "Failed to create subdirectory in ${destDir.path}",
+                        "Failed to create relative subdirectories in ${destDir.path}",
+                    )
+                    continue
+                }
+                val dynamicRelativePath = destFileName.substringBeforeLast("/", "")
+                destFileName = destFileName.substringAfterLast("/")
+                val destSubSubDir =
+                    if (dynamicRelativePath == "") destSubDir
+                    else destSubDir.createDirectory(dynamicRelativePath)
+                if (destSubSubDir == null) {
+                    Logger.e(
+                        "Action",
+                        "Failed to create dynamic subdirectories in ${destSubDir.path}",
                     )
                     continue
                 }
 
                 if (
-                    destSubDir
+                    destSubSubDir
                         .listChildren(false)
                         .firstOrNull { it.isFile && it.name == destFileName }
                         ?.isIdenticalTo(srcFile, context)
@@ -184,11 +196,11 @@ sealed class Action {
                 try {
                     Logger.i(
                         "Action",
-                        "Moving $srcFileName to ${destSubDir.path}/$destFileName",
+                        "Moving $srcFileName to ${destSubSubDir.path}/$destFileName",
                     )
                     destPaths.add(
                         srcFile.moveTo(
-                            destSubDir,
+                            destSubSubDir,
                             destFileName,
                             keepOriginal,
                             overwriteExisting,
@@ -371,9 +383,21 @@ sealed class Action {
                 Logger.e("Action", "$dest is invalid")
                 return
             }
-            val destFileName = getDestFileName()
+            var destFileName = getDestFileName()
+            val dynamicRelativePath = destFileName.substringBeforeLast("/", "")
+            destFileName = destFileName.substringAfterLast("/")
+            val destSubDir =
+                if (dynamicRelativePath == "") destDir
+                else destDir.createDirectory(dynamicRelativePath)
+            if (destSubDir == null) {
+                Logger.e(
+                    "Action",
+                    "Failed to create dynamic subdirectories in ${destDir.path}",
+                )
+                return
+            }
 
-            destDir.listChildren(false).firstOrNull { it.isFile && it.name == destFileName }
+            destSubDir.listChildren(false).firstOrNull { it.isFile && it.name == destFileName }
                 ?.run {
                     if (!overwriteExisting) {
                         Logger.e("Action", "$destFileName already exists")
@@ -382,7 +406,7 @@ sealed class Action {
 
                     delete()
                 }
-            val destFile = destDir.createFile(destFileName, "application/zip") ?: run {
+            val destFile = destSubDir.createFile(destFileName, "application/zip") ?: run {
                 Logger.e("Action", "Failed to create $destFileName")
                 return@execute
             }

@@ -179,7 +179,7 @@ sealed class RemoteAction : Action() {
 
             for ((srcFile, _) in srcFiles) {
                 val srcFileName = srcFile.name ?: continue
-                val destFileName = getDestFileName(srcFile)
+                var destFileName = getDestFileName(srcFile)
                 val relativePath = srcFile.parent!!.pathRelativeTo(src)
 
                 if (destServer == null) {
@@ -189,13 +189,25 @@ sealed class RemoteAction : Action() {
                     if (destSubDir == null) {
                         Logger.e(
                             "RemoteAction",
-                            "Failed to create subdirectory in ${destDir.path}",
+                            "Failed to create relative subdirectories in ${destDir.path}",
+                        )
+                        continue
+                    }
+                    val dynamicRelativePath = destFileName.substringBeforeLast("/", "")
+                    destFileName = destFileName.substringAfterLast("/")
+                    val destSubSubDir =
+                        if (dynamicRelativePath == "") destSubDir
+                        else destSubDir.createDirectory(dynamicRelativePath)
+                    if (destSubSubDir == null) {
+                        Logger.e(
+                            "RemoteAction",
+                            "Failed to create dynamic subdirectories in ${destSubDir.path}",
                         )
                         continue
                     }
 
                     if (
-                        destSubDir
+                        destSubSubDir
                             .listChildren(false)
                             .firstOrNull { it.isFile && it.name == destFileName }
                             ?.isIdenticalTo(srcFile, context)
@@ -211,11 +223,11 @@ sealed class RemoteAction : Action() {
                     try {
                         Logger.i(
                             "RemoteAction",
-                            "Moving $srcFileName to ${destSubDir.path}/$destFileName",
+                            "Moving $srcFileName to ${destSubSubDir.path}/$destFileName",
                         )
                         destLocalPaths.add(
                             srcFile.moveTo(
-                                destSubDir,
+                                destSubSubDir,
                                 destFileName,
                                 keepOriginal,
                                 overwriteExisting,
@@ -230,29 +242,45 @@ sealed class RemoteAction : Action() {
                         continue
                     }
                 } else {
-                    val destSubDir = if (!preserveStructure || relativePath == null) dest
-                    else "${dest.trimEnd('/')}$relativePath"
+                    val destSubDir =
+                        if (!preserveStructure || relativePath == null) dest
+                        else "${dest.trimEnd('/')}$relativePath"
+                    val dynamicRelativePath = destFileName.substringBeforeLast("/", "")
+                    destFileName = destFileName.substringAfterLast("/")
+                    val destSubSubDir =
+                        if (dynamicRelativePath == "") destSubDir
+                        else "${destSubDir.trimEnd('/')}/${dynamicRelativePath.trimStart('/')}"
 
                     try {
                         Logger.i(
                             "RemoteAction",
-                            "Moving $srcFileName to $destSubDir/$destFileName",
+                            "Moving $srcFileName to $destSubSubDir/$destFileName",
                         )
                         val uploadCompleted = SFTP.runOn(destServer) {
+                            try {
+                                mkdirs(destSubSubDir)
+                            } catch (e: Exception) {
+                                Logger.e(
+                                    "RemoteAction",
+                                    "Failed to create dynamic subdirectories in $dest",
+                                    e,
+                                )
+                                return@runOn false
+                            }
+
                             if (!overwriteExisting) {
-                                ls(destSubDir, false) {
+                                ls(destSubSubDir, false) {
                                     if (it.isRegularFile && it.name == destFileName)
-                                        throw NioFileAlreadyExistsException("$destSubDir/$destFileName already exists")
+                                        throw NioFileAlreadyExistsException("$destSubSubDir/$destFileName already exists")
 
                                     false
                                 }
                             }
 
                             try {
-                                mkdirs(destSubDir)
                                 put(
                                     srcFile.path,
-                                    "${destSubDir.trimEnd('/')}/$destFileName",
+                                    "${destSubSubDir.trimEnd('/')}/$destFileName",
                                 )
 
                                 true
@@ -501,15 +529,28 @@ sealed class RemoteAction : Action() {
             if (!BuildConfig.HAS_NETWORK_FEATURE)
                 return
 
-            val destFileName = getDestFileName()
+            var destFileName = getDestFileName()
+            val dynamicRelativePath = destFileName.substringBeforeLast("/", "").trimStart('/')
+            destFileName = destFileName.substringAfterLast("/")
+
             val destFile = if (destServer == null) {
                 val destDir = File.fromPath(context, dest)
                 if (destDir == null) {
                     Logger.e("RemoteAction", "$dest is invalid")
                     return
                 }
+                val destSubDir =
+                    if (dynamicRelativePath == "") destDir
+                    else destDir.createDirectory(dynamicRelativePath)
+                if (destSubDir == null) {
+                    Logger.e(
+                        "RemoteAction",
+                        "Failed to create dynamic subdirectories in ${destDir.path}",
+                    )
+                    return
+                }
 
-                destDir.listChildren(false).firstOrNull { it.isFile && it.name == destFileName }
+                destSubDir.listChildren(false).firstOrNull { it.isFile && it.name == destFileName }
                     ?.run {
                         if (!overwriteExisting) {
                             Logger.e("RemoteAction", "$destFileName already exists")
@@ -519,7 +560,7 @@ sealed class RemoteAction : Action() {
                         delete()
                     }
 
-                destDir.createFile(destFileName, "application/zip") ?: run {
+                destSubDir.createFile(destFileName, "application/zip") ?: run {
                     Logger.e("RemoteAction", "Failed to create $destFileName")
                     return@execute
                 }
@@ -608,11 +649,23 @@ sealed class RemoteAction : Action() {
             }
 
             if (destServer != null) {
+                val destSubDir =
+                    if (dynamicRelativePath == "") dest
+                    else "${dest.trimEnd('/')}/${dynamicRelativePath.trimStart('/')}"
                 val uploadCompleted = SFTP.runOn(destServer) {
+                    if (destSubDir != dest) {
+                        try {
+                            mkdirs(destSubDir)
+                        } catch (e: Exception) {
+                            Logger.e("RemoteAction", "Failed to create subdirectories in $dest", e)
+                            return@runOn false
+                        }
+                    }
+
                     if (!overwriteExisting) {
-                        ls(dest, false) {
+                        ls(destSubDir, false) {
                             if (it.isRegularFile && it.name == destFileName)
-                                throw NioFileAlreadyExistsException("${dest.trimEnd('/')}/$destFileName already exists")
+                                throw NioFileAlreadyExistsException("${destSubDir.trimEnd('/')}/$destFileName already exists")
 
                             false
                         }
@@ -621,7 +674,7 @@ sealed class RemoteAction : Action() {
                     try {
                         put(
                             destFile.path,
-                            "${dest.trimEnd('/')}/$destFileName",
+                            "${destSubDir.trimEnd('/')}/$destFileName",
                         )
                         true
                     } catch (_: Exception) {

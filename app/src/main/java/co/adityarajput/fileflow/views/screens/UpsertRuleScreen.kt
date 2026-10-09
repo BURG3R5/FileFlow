@@ -870,6 +870,7 @@ private fun ColumnScope.ActionPage(viewModel: UpsertRuleViewModel) {
         fontWeight = FontWeight.Normal,
     )
     if (viewModel.state.error == RuleFormError.INVALID_REGEX) ErrorText(R.string.invalid_regex)
+    else if (viewModel.state.error == RuleFormError.MUST_NOT_END_IN_SLASH) ErrorText(R.string.must_not_end_in_slash)
     else if (viewModel.state.error == RuleFormError.MUST_END_IN_ZIP) ErrorText(R.string.must_end_in_zip)
     else if (viewModel.state.error == RuleFormError.INVALID_JSON) ErrorText(R.string.invalid_json)
     else if (viewModel.state.error == RuleFormError.REMOTE_ACTION_WITHOUT_SERVER) ErrorText(R.string.remote_action_without_servers)
