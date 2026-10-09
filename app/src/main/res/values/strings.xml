@@ -116,6 +116,8 @@
     <string name="explain_enable_rule_names">Adds a \"name\" field to rules</string>
     <string name="display_full_paths">Display full paths</string>
     <string name="explain_display_full_paths">Show full paths in rule tiles</string>
+    <string name="override_extensions">Override extensions</string>
+    <string name="explain_override_extensions">Use the extension in the file name template instead of the one suggested by the OS</string>
     <string name="settings_section_2">App Appearance</string>
     <string name="app_theme">App Theme</string>
     <string name="light">Light</string>

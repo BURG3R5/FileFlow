@@ -73,6 +73,7 @@ fun SettingsScreen(
 
     var enableRuleNames by remember { mutableStateOf(Preferences.enableRuleNames) }
     var displayFullPaths by remember { mutableStateOf(Preferences.displayFullPaths) }
+    var overrideExtensions by remember { mutableStateOf(Preferences.overrideExtensions) }
 
     Scaffold(
         topBar = { AppBar(stringResource(R.string.settings), true, goBack) },
@@ -188,6 +189,29 @@ fun SettingsScreen(
                                 {
                                     Preferences.displayFullPaths = it
                                     displayFullPaths = it
+                                },
+                            )
+                        }
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            Arrangement.spacedBy(dimensionResource(R.dimen.padding_small)),
+                            Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.override_extensions),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    stringResource(R.string.explain_override_extensions),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            Switch(
+                                overrideExtensions,
+                                {
+                                    Preferences.overrideExtensions = it
+                                    overrideExtensions = it
                                 },
                             )
                         }

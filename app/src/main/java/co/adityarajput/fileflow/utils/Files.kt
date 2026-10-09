@@ -117,7 +117,10 @@ sealed class File {
 
                     SAFFile(
                         destDir.documentFile.createFile(
-                            documentFile.type ?: "application/octet-stream",
+                            if (Preferences.overrideExtensions || documentFile.type == null)
+                                "application/octet-stream"
+                            else
+                                documentFile.type!!,
                             destFileName,
                         )!!,
                     )
