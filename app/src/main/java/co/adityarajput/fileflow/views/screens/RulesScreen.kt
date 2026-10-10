@@ -1,9 +1,6 @@
 package co.adityarajput.fileflow.views.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -97,11 +94,16 @@ fun RulesScreen(
                             else viewModel.selectedRule = it
                         },
                     ) {
-                        IconButton({ viewModel.dialogState = DialogState.EXECUTE }) {
-                            Icon(
-                                painterResource(R.drawable.play_circle),
-                                stringResource(R.string.execute_rule),
-                            )
+                        IconButton(
+                            { viewModel.dialogState = DialogState.EXECUTE },
+                            enabled = it.id !in viewModel.executingRuleIds,
+                        ) {
+                            if (it.id !in viewModel.executingRuleIds)
+                                Icon(
+                                    painterResource(R.drawable.play_circle),
+                                    stringResource(R.string.execute_rule),
+                                )
+                            else CircularProgressIndicator(Modifier.size(24.dp))
                         }
                         IconButton({ viewModel.dialogState = DialogState.TOGGLE_RULE }) {
                             Icon(
