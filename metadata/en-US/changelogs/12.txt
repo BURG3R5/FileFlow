@@ -1,0 +1,5 @@
+• fix: Fail gracefully for issues with encryption
+• fix: Compare files in chunks to prevent OutOfMemoryError
+• feat: Create subfolders if destination file name contains path separators
+• feat: Let users choose to override OS-suggested extensions
+• feat: Display spinner when executing rule

@@ -31,24 +31,35 @@ class RulesViewModel(private val repository: Repository) : ViewModel() {
 
     var selectedRule by mutableStateOf<Rule?>(null)
 
+    var executingRuleIds by mutableStateOf(emptySet<Int>())
+        private set
+
     fun executeRule(context: Context, showToast: (String) -> Unit) {
+        val rule = selectedRule ?: return
+        if (rule.id in executingRuleIds) return
+        executingRuleIds += rule.id
+
         viewModelScope.launch {
-            val latestLogBeforeExecution = Logger.logs.lastOrNull()
+            try {
+                val latestLogBeforeExecution = Logger.logs.lastOrNull()
 
-            withContext(Dispatchers.IO) {
-                selectedRule!!.action.execute(context) {
-                    repository.registerExecution(
-                        selectedRule!!,
-                        Execution(it, selectedRule!!.action.verb),
-                    )
+                withContext(Dispatchers.IO) {
+                    rule.action.execute(context) {
+                        repository.registerExecution(
+                            rule,
+                            Execution(it, rule.action.verb),
+                        )
+                    }
                 }
-            }
 
-            val recentErrorLog = Logger.logs
-                .dropWhile { it != latestLogBeforeExecution }.drop(1)
-                .firstOrNull { it.contains("[ERROR]") }
-            if (recentErrorLog != null) {
-                showToast("Error:" + recentErrorLog.substringAfter("[ERROR]"))
+                val recentErrorLog = Logger.logs
+                    .dropWhile { it != latestLogBeforeExecution }.drop(1)
+                    .firstOrNull { it.contains("[ERROR]") }
+                if (recentErrorLog != null) {
+                    showToast("Error:" + recentErrorLog.substringAfter("[ERROR]"))
+                }
+            } finally {
+                executingRuleIds -= rule.id
             }
         }
     }

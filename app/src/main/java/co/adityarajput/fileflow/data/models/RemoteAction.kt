@@ -180,7 +180,7 @@ sealed class RemoteAction : Action() {
             for ((srcFile, _) in srcFiles) {
                 val srcFileName = srcFile.name ?: continue
                 var destFileName = getDestFileName(srcFile)
-                val relativePath = srcFile.parent!!.pathRelativeTo(src)
+                val relativePath = srcFile.parent?.pathRelativeTo(src)
 
                 if (destServer == null) {
                     val destSubDir =
