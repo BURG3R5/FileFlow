@@ -55,7 +55,5 @@ jobs:
       - name: Upload mapping
         uses: actions/upload-artifact@v7
         with:
-          name: FileFlow_mappings_${{ github.ref_name }}
-          path: |
-            app/build/outputs/mapping/release/mapping.txt
-            app/build/outputs/mapping/releaseWithNetwork/mapping.txt
+          name: FileFlow_mappings
+          path: mappings/
