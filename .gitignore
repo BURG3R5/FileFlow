@@ -2,6 +2,7 @@
 .gradle
 /local.properties
 .idea/*
+!.idea/runConfigurations
 !.idea/icon.png
 .DS_Store
 /build
