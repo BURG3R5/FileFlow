@@ -88,9 +88,9 @@ fun GroupsScreen(
             ) {
                 items(groups, { it.id }) {
                     it.Tile(
-                        viewModel.selectedGroup == it,
+                        it.id == viewModel.selectedGroup?.id,
                         {
-                            if (viewModel.selectedGroup == it) viewModel.selectedGroup = null
+                            if (it.id == viewModel.selectedGroup?.id) viewModel.selectedGroup = null
                             else viewModel.selectedGroup = it
                         },
                     ) {
