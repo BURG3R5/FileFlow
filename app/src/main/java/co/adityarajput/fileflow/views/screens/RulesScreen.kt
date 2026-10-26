@@ -88,9 +88,9 @@ fun RulesScreen(
             ) {
                 items(state.value.rules!!, { it.id }) {
                     it.Tile(
-                        viewModel.selectedRule == it,
+                        it.id == viewModel.selectedRule?.id,
                         onClick = {
-                            if (viewModel.selectedRule == it) viewModel.selectedRule = null
+                            if (it.id == viewModel.selectedRule?.id) viewModel.selectedRule = null
                             else viewModel.selectedRule = it
                         },
                     ) {

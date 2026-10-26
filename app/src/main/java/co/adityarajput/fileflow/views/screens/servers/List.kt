@@ -68,7 +68,8 @@ fun ServersScreen(
                     Tile(
                         "${it.username}@${it.host}:${it.port}",
                         onClick = {
-                            if (viewModel.selectedServer == it) viewModel.selectedServer = null
+                            if (it.id == viewModel.selectedServer?.id) viewModel.selectedServer =
+                                null
                             else viewModel.selectedServer = it
                         },
                         buttons = {
@@ -84,7 +85,7 @@ fun ServersScreen(
                                 )
                             }
                         },
-                        expanded = viewModel.selectedServer == it,
+                        expanded = it.id == viewModel.selectedServer?.id,
                     )
                 }
                 item { Box(Modifier.height(100.dp)) {} }
